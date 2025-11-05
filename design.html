@@ -1,0 +1,1360 @@
+b<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Hazard Detection - Complete AI Wireframes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            text-align: center;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 40px;
+            font-size: 28px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        
+        .screens-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .phone {
+            background: linear-gradient(145deg, #1a1a2e 0%, #16213e 100%);
+            border-radius: 35px;
+            padding: 14px;
+            box-shadow: 0 20px 60px rgba(0, 245, 255, 0.15),
+                        inset 0 1px 2px rgba(255,255,255,0.1);
+            aspect-ratio: 9/19;
+            position: relative;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .phone:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 245, 255, 0.25);
+        }
+        
+        .phone-notch {
+            background: #000;
+            height: 28px;
+            border-radius: 0 0 18px 18px;
+            width: 160px;
+            margin: 0 auto 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+        
+        .screen {
+            background: linear-gradient(180deg, #0f0f1e 0%, #1a1a2e 100%);
+            border-radius: 22px;
+            height: calc(100% - 38px);
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f5ff, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #00f5ff;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        
+        .screen-title {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 18px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        
+        .ai-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 245, 255, 0.1);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            color: #00f5ff;
+            margin-bottom: 15px;
+        }
+        
+        .ai-pulse {
+            width: 8px;
+            height: 8px;
+            background: #00f5ff;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.8); }
+        }
+        
+        .map-area {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            height: 280px;
+            border-radius: 15px;
+            position: relative;
+            margin-bottom: 15px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            box-shadow: inset 0 2px 20px rgba(0, 245, 255, 0.1);
+        }
+        
+        .map-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: 
+                repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0, 245, 255, 0.1) 39px, rgba(0, 245, 255, 0.1) 40px),
+                repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0, 245, 255, 0.1) 39px, rgba(0, 245, 255, 0.1) 40px);
+        }
+        
+        .map-marker {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 20px;
+            border: 3px solid rgba(0, 245, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.5);
+            animation: markerPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes markerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .hazard-card {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(22, 33, 62, 0.8) 100%);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00f5ff;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .hazard-card:hover {
+            border-left-width: 4px;
+            box-shadow: 0 4px 20px rgba(0, 245, 255, 0.2);
+            transform: translateX(3px);
+        }
+        
+        .hazard-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .hazard-title::before {
+            content: '⚠';
+            font-size: 13px;
+            color: #00f5ff;
+        }
+        
+        .hazard-distance {
+            font-size: 12px;
+            color: #00f5ff;
+            opacity: 0.8;
+        }
+        
+        .severity-container {
+            background: rgba(26, 26, 46, 0.6);
+            padding: 16px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+        
+        .severity-label {
+            font-size: 11px;
+            color: #00f5ff;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .slider-track {
+            position: relative;
+            height: 6px;
+            background: rgba(0, 245, 255, 0.1);
+            border-radius: 3px;
+            margin-bottom: 8px;
+            overflow: hidden;
+        }
+        
+        .slider-fill {
+            position: absolute;
+            height: 100%;
+            width: 40%;
+            background: linear-gradient(90deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 3px;
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
+        }
+        
+        .slider-thumb {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: #00f5ff;
+            border-radius: 50%;
+            top: -5px;
+            left: 40%;
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.8);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .search-box {
+            background: rgba(26, 26, 46, 0.6);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            font-size: 13px;
+            margin-bottom: 15px;
+            width: 100%;
+            color: #fff;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .search-box:focus {
+            border-color: #00f5ff;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.2);
+        }
+        
+        .search-box::placeholder {
+            color: rgba(0, 245, 255, 0.5);
+        }
+        
+        .button {
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            color: #fff;
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            width: 100%;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 20px rgba(0, 245, 255, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(0, 245, 255, 0.4);
+        }
+        
+        .button-secondary {
+            background: transparent;
+            border: 2px solid #00f5ff;
+            color: #00f5ff;
+            box-shadow: none;
+        }
+        
+        .button-secondary:hover {
+            background: rgba(0, 245, 255, 0.1);
+        }
+        
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-box {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(22, 33, 62, 0.8) 100%);
+            padding: 14px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-box:hover {
+            border-color: #00f5ff;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 25px rgba(0, 245, 255, 0.2);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-label {
+            font-size: 10px;
+            color: rgba(0, 245, 255, 0.7);
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .camera-view {
+            background: #000;
+            height: 200px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00f5ff;
+            font-size: 13px;
+            border: 2px solid rgba(0, 245, 255, 0.3);
+            overflow: hidden;
+        }
+        
+        .camera-view::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00f5ff, transparent);
+            animation: scanline 2s linear infinite;
+        }
+        
+        @keyframes scanline {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+        
+        .detection-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: linear-gradient(135deg, rgba(0, 245, 255, 0.2) 0%, rgba(0, 102, 255, 0.2) 100%);
+            border: 1px solid rgba(0, 245, 255, 0.5);
+            color: #00f5ff;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 10px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .detection-badge::before {
+            content: '●';
+            color: #00f5ff;
+            animation: blink 1s ease-in-out infinite;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .list-item {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.6) 100%);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            color: #fff;
+            transition: all 0.3s ease;
+            font-size: 13px;
+        }
+        
+        .list-item:hover {
+            border-color: #00f5ff;
+            transform: translateX(3px);
+        }
+        
+        .settings-section {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.6) 0%, rgba(22, 33, 62, 0.6) 100%);
+            padding: 14px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+        
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0, 245, 255, 0.1);
+            color: #fff;
+            font-size: 13px;
+        }
+        
+        .settings-item:last-child {
+            border-bottom: none;
+        }
+        
+        .toggle {
+            width: 45px;
+            height: 24px;
+            background: rgba(0, 245, 255, 0.2);
+            border: 1px solid rgba(0, 245, 255, 0.3);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle.active {
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            border-color: #00f5ff;
+        }
+        
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 3px;
+            transition: 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        .toggle.active::after {
+            left: 22px;
+        }
+        
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(180deg, rgba(10, 10, 10, 0.95) 0%, rgba(26, 26, 46, 0.95) 100%);
+            padding: 10px;
+            border-radius: 22px 22px 0 0;
+            display: flex;
+            justify-content: space-around;
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(0, 245, 255, 0.2);
+        }
+        
+        .nav-item {
+            text-align: center;
+            font-size: 20px;
+            color: rgba(0, 245, 255, 0.4);
+            padding: 6px 14px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: #00f5ff;
+            background: rgba(0, 245, 255, 0.1);
+            box-shadow: 0 0 15px rgba(0, 245, 255, 0.3);
+        }
+        
+        .neural-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.03;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(0, 245, 255, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(0, 102, 255, 0.3) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .confidence-meter {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 10px;
+            color: #00f5ff;
+            margin-top: 6px;
+        }
+        
+        .confidence-bar {
+            flex: 1;
+            height: 3px;
+            background: rgba(0, 245, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 2px;
+        }
+
+        .model-card {
+            background: linear-gradient(135deg, rgba(26, 26, 46, 0.8) 0%, rgba(22, 33, 62, 0.8) 100%);
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+        }
+
+        .model-name {
+            color: #00f5ff;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .model-status {
+            font-size: 11px;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .privacy-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin: 0 auto 12px;
+            box-shadow: 0 0 20px rgba(0, 245, 255, 0.4);
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: rgba(26, 26, 46, 0.4);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 245, 255, 0.1);
+        }
+
+        .feature-icon {
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .feature-text {
+            flex: 1;
+            font-size: 12px;
+            color: #fff;
+        }
+
+        .analytics-chart {
+            background: rgba(26, 26, 46, 0.6);
+            height: 120px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            display: flex;
+            align-items: flex-end;
+            padding: 10px;
+            gap: 8px;
+        }
+
+        .chart-bar {
+            flex: 1;
+            background: linear-gradient(180deg, #00f5ff 0%, #0066ff 100%);
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.3);
+        }
+
+        .radio-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(26, 26, 46, 0.4);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border: 1px solid rgba(0, 245, 255, 0.2);
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .radio-item:hover {
+            border-color: #00f5ff;
+            background: rgba(26, 26, 46, 0.6);
+        }
+
+        .radio-button {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #00f5ff;
+            border-radius: 50%;
+            position: relative;
+        }
+
+        .radio-button.selected::after {
+            content: '';
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: #00f5ff;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 0 10px rgba(0, 245, 255, 0.8);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ AI Road Hazard Detection System ⚡</h1>
+        
+        <div class="screens-grid">
+            <!-- Screen 1: AI Dashboard -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">AI Dashboard</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Neural Network Active
+                    </div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-number">247</div>
+                            <div class="stat-label">Detected</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">12</div>
+                            <div class="stat-label">Nearby</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">89%</div>
+                            <div class="stat-label">Accuracy</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">156</div>
+                            <div class="stat-label">Verified</div>
+                        </div>
+                    </div>
+                    
+                    <div class="analytics-chart">
+                        <div class="chart-bar" style="height: 60%;"></div>
+                        <div class="chart-bar" style="height: 80%;"></div>
+                        <div class="chart-bar" style="height: 45%;"></div>
+                        <div class="chart-bar" style="height: 90%;"></div>
+                        <div class="chart-bar" style="height: 70%;"></div>
+                    </div>
+                    
+                    <div class="button" style="margin-bottom: 8px;">Start Detection</div>
+                    <div class="button button-secondary">View Neural Map</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item active">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 2: Live AI Alerts -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Live AI Alerts</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Scanning Environment
+                    </div>
+                    
+                    <div class="map-area">
+                        <div class="map-grid"></div>
+                        <div class="map-marker" style="top: 25%; left: 35%;">×</div>
+                        <div class="map-marker" style="top: 55%; left: 60%; width: 35px; height: 35px;">×</div>
+                    </div>
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Pothole</div>
+                        <div class="hazard-distance">1.2 km ahead</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 94%;"></div>
+                            </div>
+                            <span>94%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Stalled Vehicle</div>
+                        <div class="hazard-distance">500 m ahead</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 87%;"></div>
+                            </div>
+                            <span>87%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item active">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 3: Hazard Detail View -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Hazard Overview</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Multi-Modal Analysis
+                    </div>
+                    
+                    <div class="map-area" style="height: 160px;">
+                        <div class="map-grid"></div>
+                        <div class="map-marker" style="top: 45%; left: 45%;">×</div>
+                    </div>
+                    
+                    <div class="severity-container">
+                        <div class="severity-label">AI Severity Score</div>
+                        <div class="slider-track">
+                            <div class="slider-fill" style="width: 40%;"></div>
+                            <div class="slider-thumb" style="left: 40%;"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span>Minor</span>
+                            <span>Critical</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button" style="margin: 15px 0 8px;">Verify Hazard</div>
+                    <div class="button button-secondary">Mark Resolved</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item active">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 4: All Hazards List -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">All Hazards</div>
+                    
+                    <input type="text" class="search-box" placeholder="🔍 Search hazards...">
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Pothole</div>
+                        <div class="hazard-distance">1.2 km</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 94%;"></div>
+                            </div>
+                            <span>94%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Stalled Vehicle</div>
+                        <div class="hazard-distance">500 m</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 87%;"></div>
+                            </div>
+                            <span>87%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Debris</div>
+                        <div class="hazard-distance">800 m</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 91%;"></div>
+                            </div>
+                            <span>91%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="hazard-card">
+                        <div class="hazard-title">Speed Breaker</div>
+                        <div class="hazard-distance">2.5 km</div>
+                        <div class="confidence-meter">
+                            <span>AI Conf:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 96%;"></div>
+                            </div>
+                            <span>96%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item active">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 5: Camera Detection Mode -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Live Detection</div>
+                    
+                    <div class="camera-view">
+                        <div class="detection-badge">Recording</div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 40px; margin-bottom: 10px;">📹</div>
+                            <div>AI Processing Feed</div>
+                        </div>
+                    </div>
+                    
+                    <div class="ai-badge" style="width: 100%; justify-content: center;">
+                        <div class="ai-pulse"></div>
+                        YOLOv8 + SAM Active
+                    </div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 12px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 245, 255, 0.2);">
+                        <div style="font-size: 11px; color: #00f5ff; margin-bottom: 8px; text-transform: uppercase;">Recent Detections</div>
+                        <div class="list-item" style="margin-bottom: 6px;">
+                            <span style="font-weight: 600;">Pothole</span>
+                            <span style="font-size: 10px; color: #00f5ff;">2 min ago</span>
+                        </div>
+                        <div class="list-item">
+                            <span style="font-weight: 600;">Speed Breaker</span>
+                            <span style="font-size: 10px; color: #00f5ff;">5 min ago</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button">Stop Detection</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item active">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 6: Settings -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Settings</div>
+                    
+                    <div class="settings-section">
+                        <div class="settings-item">
+                            <span>Auto-Detection</span>
+                            <div class="toggle active"></div>
+                        </div>
+                        <div class="settings-item">
+                            <span>Sound Alerts</span>
+                            <div class="toggle active"></div>
+                        </div>
+                        <div class="settings-item">
+                            <span>Privacy Mode</span>
+                            <div class="toggle active"></div>
+                        </div>
+                        <div class="settings-item">
+                            <span>Data Upload</span>
+                            <div class="toggle"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-section">
+                        <div class="settings-item">
+                            <span>Account</span>
+                            <span style="font-size: 16px; color: #00f5ff;">›</span>
+                        </div>
+                        <div class="settings-item">
+                            <span>About</span>
+                            <span style="font-size: 16px; color: #00f5ff;">›</span>
+                        </div>
+                        <div class="settings-item">
+                            <span>Help & Support</span>
+                            <span style="font-size: 16px; color: #00f5ff;">›</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item active">⚙</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screen 7: Report Submission -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Report Hazard</div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 245, 255, 0.2);">
+                        <div style="font-size: 11px; color: #00f5ff; margin-bottom: 10px; text-transform: uppercase;">Hazard Type</div>
+                        <div class="radio-item">
+                            <span>Pothole</span>
+                            <div class="radio-button selected"></div>
+                        </div>
+                        <div class="radio-item">
+                            <span>Speed Breaker</span>
+                            <div class="radio-button"></div>
+                        </div>
+                        <div class="radio-item">
+                            <span>Debris</span>
+                            <div class="radio-button"></div>
+                        </div>
+                        <div class="radio-item">
+                            <span>Stalled Vehicle</span>
+                            <div class="radio-button"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="severity-container" style="margin-bottom: 15px;">
+                        <div class="severity-label">Severity Level</div>
+                        <div class="slider-track">
+                            <div class="slider-fill" style="width: 60%;"></div>
+                            <div class="slider-thumb" style="left: 60%;"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span>Minor</span>
+                            <span>Critical</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button">Submit Report</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item active">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 8: AI Model Selection -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">AI Models</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Edge-Cloud Hybrid
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-name">YOLOv8 Detection</div>
+                        <div class="model-status">✓ Active • Edge Processing</div>
+                        <div class="confidence-meter" style="margin-top: 8px;">
+                            <span>Performance:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 92%;"></div>
+                            </div>
+                            <span>92%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-name">SAM Segmentation</div>
+                        <div class="model-status">✓ Active • Cloud Processing</div>
+                        <div class="confidence-meter" style="margin-top: 8px;">
+                            <span>Accuracy:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 88%;"></div>
+                            </div>
+                            <span>88%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-name">MiDaS Depth Estimation</div>
+                        <div class="model-status">○ Standby • Cloud Processing</div>
+                        <div class="confidence-meter" style="margin-top: 8px;">
+                            <span>Ready:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 100%;"></div>
+                            </div>
+                            <span>100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="model-card">
+                        <div class="model-name">Temporal Consistency</div>
+                        <div class="model-status">✓ Active • Video Analysis</div>
+                        <div class="confidence-meter" style="margin-top: 8px;">
+                            <span>Tracking:</span>
+                            <div class="confidence-bar">
+                                <div class="confidence-fill" style="width: 95%;"></div>
+                            </div>
+                            <span>95%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item active">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 9: Privacy & Security -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Privacy Shield</div>
+                    
+                    <div class="privacy-icon">🔒</div>
+                    
+                    <div class="ai-badge" style="width: 100%; justify-content: center; margin-bottom: 15px;">
+                        <div class="ai-pulse"></div>
+                        End-to-End Encryption Active
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">👤</div>
+                        <div class="feature-text">Face Blurring (On-Device)</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🚗</div>
+                        <div class="feature-text">License Plate Masking</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🔐</div>
+                        <div class="feature-text">Homomorphic Encryption</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">📡</div>
+                        <div class="feature-text">Federated Learning</div>
+                    </div>
+                    
+                    <div class="feature-item">
+                        <div class="feature-icon">🗑️</div>
+                        <div class="feature-text">Auto Data Deletion (7 days)</div>
+                    </div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 14px; border-radius: 10px; margin-top: 15px; border: 1px solid rgba(0, 245, 255, 0.2); text-align: center;">
+                        <div style="font-size: 11px; color: #00f5ff; margin-bottom: 8px;">Privacy Score</div>
+                        <div style="font-size: 32px; font-weight: 700; background: linear-gradient(135deg, #00f5ff 0%, #0066ff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">A+</div>
+                    </div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item active">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 10: Hazard Detail Analysis -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">AI Analysis</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Multi-Modal Processing
+                    </div>
+                    
+                    <div class="map-area" style="height: 160px;">
+                        <div class="map-grid"></div>
+                        <div class="map-marker" style="top: 45%; left: 45%;">×</div>
+                    </div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 245, 255, 0.2);">
+                        <div style="font-size: 13px; color: #fff; font-weight: 600; margin-bottom: 8px;">Pothole Detected</div>
+                        <div style="font-size: 11px; color: rgba(255,255,255,0.7); margin-bottom: 10px;">📍 Ring Road, Sector 14</div>
+                        
+                        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px;">
+                            <div style="background: rgba(0,245,255,0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #00f5ff;">Depth</div>
+                                <div style="font-size: 16px; color: #fff; font-weight: 600;">8 cm</div>
+                            </div>
+                            <div style="background: rgba(0,245,255,0.1); padding: 8px; border-radius: 6px; text-align: center;">
+                                <div style="font-size: 11px; color: #00f5ff;">Size</div>
+                                <div style="font-size: 16px; color: #fff; font-weight: 600;">45 cm</div>
+                            </div>
+                        </div>
+                        
+                        <div class="severity-label">Severity Assessment</div>
+                        <div class="slider-track">
+                            <div class="slider-fill" style="width: 65%;"></div>
+                            <div class="slider-thumb" style="left: 65%;"></div>
+                        </div>
+                        <div class="slider-labels">
+                            <span>Minor</span>
+                            <span>Critical</span>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-grid" style="margin-bottom: 12px;">
+                        <div class="stat-box">
+                            <div class="stat-number">24</div>
+                            <div class="stat-label">Reports</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">18</div>
+                            <div class="stat-label">Verified</div>
+                        </div>
+                    </div>
+                    
+                    <div class="button" style="margin-bottom: 8px;">Verify Hazard</div>
+                    <div class="button button-secondary">Mark Resolved</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item active">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Screen 11: Community & Crowd Intelligence -->
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="screen">
+                    <div class="neural-bg"></div>
+                    <div class="status-bar">
+                        <span>9:41</span>
+                        <span>⚡︎📶 ☰</span>
+                    </div>
+                    <div class="screen-title">Crowd Intelligence</div>
+                    
+                    <div class="ai-badge">
+                        <div class="ai-pulse"></div>
+                        Federated Learning Network
+                    </div>
+                    
+                    <div class="stat-grid">
+                        <div class="stat-box">
+                            <div class="stat-number">2.4K</div>
+                            <div class="stat-label">Active Users</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-number">847</div>
+                            <div class="stat-label">Your Reports</div>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 245, 255, 0.2);">
+                        <div style="font-size: 11px; color: #00f5ff; margin-bottom: 10px; text-transform: uppercase;">Your Contribution</div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #fff;">Accuracy Score</span>
+                            <span style="font-size: 12px; color: #00f5ff; font-weight: 600;">96%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span style="font-size: 12px; color: #fff;">Reputation Level</span>
+                            <span style="font-size: 12px; color: #00f5ff; font-weight: 600;">Expert</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-size: 12px; color: #fff;">Rewards Earned</span>
+                            <span style="font-size: 12px; color: #00f5ff; font-weight: 600;">2,450 pts</span>
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(26, 26, 46, 0.6); padding: 14px; border-radius: 10px; margin-bottom: 12px; border: 1px solid rgba(0, 245, 255, 0.2);">
+                        <div style="font-size: 11px; color: #00f5ff; margin-bottom: 10px; text-transform: uppercase;">Recent Validations</div>
+                        <div class="list-item" style="margin-bottom: 6px;">
+                            <span style="font-weight: 600;">Pothole - Ring Rd</span>
+                            <span style="font-size: 10px; color: #00f5ff;">+50 pts</span>
+                        </div>
+                        <div class="list-item" style="margin-bottom: 6px;">
+                            <span style="font-weight: 600;">Debris - NH-44</span>
+                            <span style="font-size: 10px; color: #00f5ff;">+30 pts</span>
+                        </div>
+                        <div class="list-item">
+                            <span style="font-weight: 600;">Speed Breaker</span>
+                            <span style="font-size: 10px; color: #00f5ff;">+40 pts</span>
+                        </div>
+                    </div>
+                    
+                    <div class="button">View Leaderboard</div>
+                    
+                    <div class="bottom-nav">
+                        <div class="nav-item">⌂</div>
+                        <div class="nav-item">⚠</div>
+                        <div class="nav-item">📷</div>
+                        <div class="nav-item active">🧠</div>
+                        <div class="nav-item">⚙</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html
