@@ -104,7 +104,27 @@ export default function CameraScreen() {
 
   // Handle detection response from server
   const handleDetectionResponse = useCallback((response: DetectionResponse) => {
+    console.log('\n' + '🎯'.repeat(30));
+    console.log('PROCESSING DETECTION RESPONSE');
+    console.log('🎯'.repeat(30));
+    console.log('Response data:', {
+      type: response.type,
+      frame_id: response.frame_id,
+      detection_count: response.detection_count,
+      processing_time_ms: response.processing_time_ms,
+      timestamp: response.timestamp,
+    });
+
     if (response.detections && response.detections.length > 0) {
+      console.log('✅ DETECTIONS FOUND:', response.detections.length);
+      response.detections.forEach((det, idx) => {
+        console.log(`   ${idx + 1}. ${det.class_name}:`, {
+          confidence: `${(det.confidence * 100).toFixed(1)}%`,
+          bbox: det.bbox,
+          class_id: det.class_id,
+        });
+      });
+
       // Convert server detections to UI format
       const newDetections: Detection[] = response.detections.map((det, idx) => ({
         id: Date.now() + idx,
@@ -114,6 +134,7 @@ export default function CameraScreen() {
         bbox: det.bbox,
       }));
 
+      console.log('💾 Adding to UI detection list...');
       // Add to detection list (keep last 20)
       setDetections(prev => [...newDetections, ...prev].slice(0, 20));
 
@@ -125,21 +146,35 @@ export default function CameraScreen() {
         totalDetections: detectionCountRef.current,
       }));
 
+      console.log('📊 Updated stats:', {
+        fps: response.processing_time_ms ? Math.round(1000 / response.processing_time_ms) : 'N/A',
+        avgLatency: response.processing_time_ms,
+        totalDetections: detectionCountRef.current,
+      });
+
       // Alert for high-confidence detections
       if (DETECTION_CONFIG.alertOnDetection) {
         newDetections.forEach(det => {
           if (det.confidence >= DETECTION_CONFIG.minConfidenceForAlert * 100) {
             const icon = HAZARD_ICONS[det.type] || HAZARD_ICONS['Default'];
-            console.log(`${icon} ${det.type} detected with ${det.confidence}% confidence`);
+            console.log(`🚨 HIGH CONFIDENCE: ${icon} ${det.type} detected with ${det.confidence}% confidence`);
           }
         });
       }
+    } else {
+      console.log('⚪ NO DETECTIONS in this frame');
     }
+    console.log('🎯'.repeat(30) + '\n');
   }, []);
 
   // Capture and send frame for detection
   const captureAndDetectFrame = useCallback(async () => {
     if (!cameraRef.current || !wsClientRef.current || !isConnected) {
+      console.log('⏸️  Skipping frame capture:', {
+        hasCamera: !!cameraRef.current,
+        hasWsClient: !!wsClientRef.current,
+        isConnected,
+      });
       return;
     }
 
@@ -150,62 +185,120 @@ export default function CameraScreen() {
       const minInterval = 1000 / DETECTION_CONFIG.maxFrameRate;
 
       if (timeSinceLastFrame < minInterval) {
+        console.log(`⏱️  Throttling frame (${timeSinceLastFrame.toFixed(0)}ms < ${minInterval.toFixed(0)}ms)`);
         return;
       }
 
       lastFrameTimeRef.current = now;
 
+      console.log('\n' + '='.repeat(60));
+      console.log('📸 CAPTURING FRAME FROM CAMERA');
+      console.log('='.repeat(60));
+      console.log('⏰ Timestamp:', new Date().toISOString());
+      console.log('📊 Frame config:', {
+        quality: DETECTION_CONFIG.frameQualityJpeg,
+        maxFrameRate: DETECTION_CONFIG.maxFrameRate,
+        timeSinceLastFrame: `${timeSinceLastFrame.toFixed(0)}ms`,
+      });
+
       // Take picture
+      console.log('📷 Taking picture...');
       const photo = await cameraRef.current.takePictureAsync({
         quality: DETECTION_CONFIG.frameQualityJpeg,
         base64: true,
         skipProcessing: true,
       });
 
+      console.log('✅ Picture captured:', {
+        hasPhoto: !!photo,
+        hasBase64: !!photo?.base64,
+        uri: photo?.uri,
+        width: photo?.width,
+        height: photo?.height,
+      });
+
       if (photo && photo.base64) {
-        // Send to detection service
+        console.log('📦 Base64 data:', {
+          length: photo.base64.length,
+          preview: photo.base64.substring(0, 50) + '...',
+        });
+
+        console.log('🚀 Sending frame to WebSocket client...');
         await wsClientRef.current.detectFrame(
           photo.base64,
           `frame_${now}`,
           DETECTION_CONFIG.includeAnnotatedImage
         );
+        console.log('✅ Frame sent successfully!');
+      } else {
+        console.error('❌ No photo or base64 data available');
       }
+      console.log('='.repeat(60) + '\n');
     } catch (error) {
-      console.error('Frame capture error:', error);
+      console.error('\n' + '❌'.repeat(30));
+      console.error('FRAME CAPTURE ERROR:');
+      console.error('Error:', error);
+      console.error('Error type:', error instanceof Error ? error.constructor.name : typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : String(error));
+      console.error('❌'.repeat(30) + '\n');
     }
   }, [isConnected]);
 
   // Start detection
   const startDetection = useCallback(async () => {
+    console.log('\n' + '🚀'.repeat(30));
+    console.log('STARTING DETECTION MODE');
+    console.log('🚀'.repeat(30));
+
     // Check permissions
     if (!permission?.granted) {
+      console.log('📋 Requesting camera permission...');
       const result = await requestPermission();
       if (!result.granted) {
+        console.error('❌ Camera permission denied');
         Alert.alert('Permission Required', 'Camera permission is needed for detection');
         return;
       }
+      console.log('✅ Camera permission granted');
     }
 
     // Connect to service if not connected
     if (!isConnected && !isConnecting) {
+      console.log('🔌 Not connected, initiating connection...');
       await connectToService();
     }
 
     // Wait for connection
     if (!wsClientRef.current || !isConnected) {
+      console.warn('⚠️  Waiting for connection to detection service...');
       Alert.alert('Not Connected', 'Please wait for connection to detection service');
       return;
     }
+
+    console.log('✅ Connected to detection service');
+    console.log('🎬 Starting frame capture...');
+    console.log('📊 Detection config:', {
+      maxFrameRate: DETECTION_CONFIG.maxFrameRate,
+      frameQualityJpeg: DETECTION_CONFIG.frameQualityJpeg,
+      confidenceThreshold: DETECTION_CONFIG.confidenceThreshold,
+      includeAnnotatedImage: DETECTION_CONFIG.includeAnnotatedImage,
+    });
 
     // Start recording and frame capture
     setIsRecording(true);
     detectionCountRef.current = 0;
 
     // Set up frame capture interval
+    const intervalMs = 1000 / DETECTION_CONFIG.maxFrameRate;
+    console.log(`⏱️  Setting up frame capture interval: ${intervalMs.toFixed(0)}ms (${DETECTION_CONFIG.maxFrameRate} FPS)`);
+    
     frameIntervalRef.current = setInterval(
       captureAndDetectFrame,
-      1000 / DETECTION_CONFIG.maxFrameRate
+      intervalMs
     );
+
+    console.log('✅ Detection mode active!');
+    console.log('🚀'.repeat(30) + '\n');
   }, [permission, isConnected, isConnecting, connectToService, captureAndDetectFrame]);
 
   // Stop detection

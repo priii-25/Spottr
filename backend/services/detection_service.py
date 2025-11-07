@@ -124,31 +124,37 @@ class DetectionService:
             raise RuntimeError("Model not initialized. Call initialize() first.")
         
         try:
+            logger.info(f"     Converting bytes to image...")
             # Convert bytes to numpy array
             nparr = np.frombuffer(image_bytes, np.uint8)
             img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
             
             if img is None:
+                logger.error(f"    Failed to decode image from bytes")
                 raise ValueError("Failed to decode image")
             
+            logger.info(f"    Image shape: {img.shape} (HxWxC)")
+            
             # Run detection
+            logger.info(f"   🤖 Running YOLO inference...")
+            logger.info(f"      Confidence threshold: {settings.confidence_threshold}")
+            logger.info(f"      IOU threshold: {settings.iou_threshold}")
             results = await self._run_inference(img)
             
+            logger.info(f"    Inference complete")
+            
             # Parse results
+            logger.info(f"    Parsing results...")
             detections = self._parse_results(results)
+            logger.info(f"    Parsed {len(detections)} detections")
             
             # Annotate image
             annotated_bytes = await self._annotate_image(img, results)
             
-            if frame_id:
-                logger.debug(
-                    f"Frame {frame_id}: {len(detections)} detections"
-                )
-            
             return detections, annotated_bytes
             
         except Exception as e:
-            logger.error(f"Detection error: {str(e)}")
+            logger.error(f"    Detection error: {str(e)}")
             raise
     
     async def detect_from_base64(
@@ -167,28 +173,41 @@ class DetectionService:
             Tuple of (detections list, annotated image base64)
         """
         try:
+            logger.info(f" [{frame_id}] Received frame for detection")
+            logger.info(f"    Base64 length: {len(base64_str)} chars")
+            
             # Remove data URL prefix if present
             if ',' in base64_str:
                 base64_str = base64_str.split(',')[1]
+                logger.info(f"     Removed data URL prefix")
             
             # Decode base64
+            logger.info(f"    Decoding base64...")
             image_bytes = base64.b64decode(base64_str)
+            logger.info(f"    Decoded to {len(image_bytes)} bytes")
             
             # Perform detection
+            logger.info(f"    Running detection...")
             detections, annotated_bytes = await self.detect_from_bytes(
                 image_bytes,
                 frame_id
             )
             
+            logger.info(f"    Found {len(detections)} detections")
+            for det in detections:
+                logger.info(f"      - {det.class_name}: {det.confidence:.2%} at {det.bbox}")
+            
             # Convert annotated image back to base64
             annotated_base64 = None
             if annotated_bytes:
                 annotated_base64 = base64.b64encode(annotated_bytes).decode('utf-8')
+                logger.info(f"     Generated annotated image")
             
+            logger.info(f" [{frame_id}] Detection complete\n")
             return detections, annotated_base64
             
         except Exception as e:
-            logger.error(f"Base64 detection error: {str(e)}")
+            logger.error(f" [{frame_id}] Base64 detection error: {str(e)}")
             raise
     
     async def _run_inference(self, img: np.ndarray):

@@ -5,7 +5,7 @@
 // Get local IP for development
 // Update this with your computer's local IP when running backend
 export const DETECTION_SERVICE_URL = __DEV__
-  ? 'ws://10.6.12.186:8000' // Your local IP - Backend running on this machine
+  ? 'ws://10.7.10.20:8000' // Your local IP - Backend running on this machine
   : 'wss://your-production-url.com'; // Update for production
 
 export const DETECTION_CONFIG = {

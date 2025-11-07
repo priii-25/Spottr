@@ -172,16 +172,20 @@ async def websocket_detect(websocket: WebSocket, client_id: str):
     try:
         while True:
             # Receive message from client
+            logger.info(f"⏳ Waiting for message from {client_id}...")
             data = await websocket.receive_json()
             
             message_type = data.get('type')
+            logger.info(f" Received message type: '{message_type}' from {client_id}")
             
             if message_type == 'frame':
                 # Process frame
+                logger.info(f" Processing frame message...")
                 await process_frame(client_id, data)
                 
             elif message_type == 'ping':
                 # Respond to ping
+                logger.info(f" Ping from {client_id}, sending pong...")
                 await connection_manager.send_json(client_id, {
                     "type": "pong",
                     "timestamp": time.time()
@@ -189,20 +193,24 @@ async def websocket_detect(websocket: WebSocket, client_id: str):
                 
             elif message_type == 'disconnect':
                 # Client requested disconnect
+                logger.info(f" Client {client_id} requested disconnect")
                 break
                 
             else:
                 # Unknown message type
+                logger.warning(f" Unknown message type '{message_type}' from {client_id}")
                 await connection_manager.send_json(client_id, {
                     "type": "error",
                     "message": f"Unknown message type: {message_type}"
                 })
     
     except WebSocketDisconnect:
-        logger.info(f"Client disconnected: {client_id}")
+        logger.info(f" Client disconnected: {client_id}")
     
     except Exception as e:
-        logger.error(f"WebSocket error for {client_id}: {str(e)}")
+        logger.error(f" WebSocket error for {client_id}: {str(e)}")
+        import traceback
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
         await connection_manager.send_json(client_id, {
             "type": "error",
             "message": str(e)
@@ -223,18 +231,33 @@ async def process_frame(client_id: str, data: dict):
     try:
         start_time = time.time()
         
+        logger.info(f"\n{'='*60}")
+        logger.info(f" RECEIVED FRAME FROM CLIENT: {client_id}")
+        logger.info(f"{'='*60}")
+        
         # Extract frame data
         frame_data = data.get('data')
         frame_id = data.get('frame_id', f"frame_{int(time.time() * 1000)}")
+        include_annotated = data.get('include_annotated', False)
+        
+        logger.info(f" Frame metadata:")
+        logger.info(f"   Frame ID: {frame_id}")
+        logger.info(f"   Timestamp: {data.get('timestamp', 'N/A')}")
+        logger.info(f"   Include annotated: {include_annotated}")
+        logger.info(f"   Data present: {frame_data is not None}")
         
         if not frame_data:
+            logger.error(f" No frame data provided!")
             await connection_manager.send_json(client_id, {
                 "type": "error",
                 "message": "No frame data provided"
             })
             return
         
+        logger.info(f"   Data length: {len(frame_data)} chars")
+        
         # Perform detection
+        logger.info(f"\n Starting detection pipeline...")
         detections, annotated_base64 = await detection_service.detect_from_base64(
             frame_data,
             frame_id=frame_id
@@ -247,6 +270,7 @@ async def process_frame(client_id: str, data: dict):
         connection_manager.increment_counter(client_id, 'detections_sent')
         
         # Send response
+        logger.info(f"\n Sending response to client...")
         response = {
             "type": "detection",
             "frame_id": frame_id,
@@ -257,20 +281,39 @@ async def process_frame(client_id: str, data: dict):
         }
         
         # Include annotated image if requested
-        if data.get('include_annotated', False) and annotated_base64:
+        if include_annotated and annotated_base64:
             response["annotated_image"] = annotated_base64
+            logger.info(f"    Annotated image included")
+        
+        logger.info(f"   Response type: {response['type']}")
+        logger.info(f"   Detections: {response['detection_count']}")
+        logger.info(f"   Processing time: {response['processing_time_ms']}ms")
         
         await connection_manager.send_json(client_id, response)
+        
+        logger.info(f" Response sent successfully!")
+        logger.info(f"{'='*60}\n")
         
         # Log performance metrics
         if len(detections) > 0:
             logger.info(
-                f"Client {client_id}: {len(detections)} detections "
+                f" SUMMARY: Client {client_id}: {len(detections)} detections "
+                f"in {processing_time:.2f}ms"
+            )
+        else:
+            logger.info(
+                f" SUMMARY: Client {client_id}: No detections "
                 f"in {processing_time:.2f}ms"
             )
         
     except Exception as e:
-        logger.error(f"Frame processing error for {client_id}: {str(e)}")
+        logger.error(f"\n FRAME PROCESSING ERROR ")
+        logger.error(f"Client: {client_id}")
+        logger.error(f"Error: {str(e)}")
+        logger.error(f"Type: {type(e).__name__}")
+        import traceback
+        logger.error(f"Traceback:\n{traceback.format_exc()}")
+        
         await connection_manager.send_json(client_id, {
             "type": "error",
             "message": f"Processing error: {str(e)}"
@@ -282,6 +325,6 @@ if __name__ == "__main__":
         "main:app",
         host=settings.host,
         port=settings.port,
-        reload=not settings.is_production,
+        reload=False,  # Disabled reload for Windows compatibility
         log_level=settings.log_level.lower()
     )
