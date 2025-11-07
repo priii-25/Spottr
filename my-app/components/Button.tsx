@@ -4,9 +4,10 @@ import { commonStyles, gradients, colors } from '@/constants/styles';
 
 interface ButtonProps {
   title: string;
-  onPress?: () => void;
+  onPress: () => void;
   secondary?: boolean;
   style?: any;
+  disabled?: boolean;
 }
 
 export default function Button({ title, onPress, secondary, style }: ButtonProps) {
