@@ -21,6 +21,8 @@ export interface DetectionResponse {
   message?: string;
   client_id?: string;
   model_info?: any;
+  encrypted_metadata?: string; // Encrypted detection metadata
+  privacy_protected?: boolean; // Indicates privacy filters were applied
 }
 
 export interface DetectionServiceConfig {

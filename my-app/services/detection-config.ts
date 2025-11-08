@@ -19,6 +19,11 @@ export const DETECTION_CONFIG = {
   confidenceThreshold: 0.25,
   includeAnnotatedImage: false, // Set to true to receive annotated frames
   
+  // Privacy & Security
+  enablePrivacyFilters: true, // Enable face and license plate blurring
+  encryptMetadata: true, // Encrypt detection metadata
+  noRawFootageTransmission: true, // Only send metadata, not raw video
+  
   // WebSocket
   autoReconnect: true,
   reconnectInterval: 3000,
@@ -29,6 +34,7 @@ export const DETECTION_CONFIG = {
   showConfidence: true,
   alertOnDetection: true,
   minConfidenceForAlert: 0.75,
+  showPrivacyIndicator: true, // Show privacy protection status
 };
 
 export const HAZARD_COLORS: Record<string, string> = {

@@ -13,6 +13,7 @@ from config import settings
 from logger import setup_logger
 from services.detection_service import detection_service
 from services.websocket_manager import connection_manager
+from services.privacy_filter import privacy_filter_service
 
 logger = setup_logger(__name__)
 
@@ -28,6 +29,8 @@ async def lifespan(app: FastAPI):
     try:
         await detection_service.initialize()
         logger.info("Detection service initialized successfully")
+        logger.info(f"Privacy features: Face blur={settings.enable_face_blur}, Plate blur={settings.enable_plate_blur}")
+        logger.info(f"Encryption enabled: {settings.encrypt_metadata}")
     except Exception as e:
         logger.error(f"Failed to initialize: {str(e)}")
         raise
@@ -256,11 +259,13 @@ async def process_frame(client_id: str, data: dict):
         
         logger.info(f"   Data length: {len(frame_data)} chars")
         
-        # Perform detection
-        logger.info(f"\n Starting detection pipeline...")
-        detections, annotated_base64 = await detection_service.detect_from_base64(
+        # Perform detection with privacy filters and encryption
+        logger.info(f"\n Starting detection pipeline with privacy filters...")
+        detections, annotated_base64, encrypted_metadata = await detection_service.detect_from_base64(
             frame_data,
-            frame_id=frame_id
+            frame_id=frame_id,
+            apply_privacy_filters=True,
+            encrypt_metadata=True
         )
         
         processing_time = (time.time() - start_time) * 1000
@@ -269,7 +274,7 @@ async def process_frame(client_id: str, data: dict):
         connection_manager.increment_counter(client_id, 'frames_processed')
         connection_manager.increment_counter(client_id, 'detections_sent')
         
-        # Send response
+        # Send response with encrypted metadata
         logger.info(f"\n Sending response to client...")
         response = {
             "type": "detection",
@@ -277,13 +282,15 @@ async def process_frame(client_id: str, data: dict):
             "detections": [det.to_dict() for det in detections],
             "detection_count": len(detections),
             "processing_time_ms": round(processing_time, 2),
-            "timestamp": time.time()
+            "timestamp": time.time(),
+            "encrypted_metadata": encrypted_metadata,  # Encrypted detection data
+            "privacy_protected": True  # Flag indicating privacy filters were applied
         }
         
-        # Include annotated image if requested
+        # Include annotated image if requested (already privacy-filtered)
         if include_annotated and annotated_base64:
             response["annotated_image"] = annotated_base64
-            logger.info(f"    Annotated image included")
+            logger.info(f"    Annotated image included (privacy-filtered)")
         
         logger.info(f"   Response type: {response['type']}")
         logger.info(f"   Detections: {response['detection_count']}")

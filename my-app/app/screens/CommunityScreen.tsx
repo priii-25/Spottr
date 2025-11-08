@@ -1,5 +1,6 @@
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import MaskedView from '@react-native-masked-view/masked-view';
 import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
@@ -13,13 +14,14 @@ export default function CommunityScreen() {
       colors={gradients.screen}
       style={styles.container}
     >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <StatusBar />
-        <ScreenTitle title="Crowd Intelligence" />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <StatusBar />
+          <ScreenTitle title="Crowd Intelligence" />
         
         <AIBadge text="Federated Learning Network" />
         
@@ -61,13 +63,17 @@ export default function CommunityScreen() {
         </View>
         
         <View style={{ height: 80 }} />
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   scrollView: {

@@ -14,6 +14,8 @@ import torch
 
 from config import settings
 from logger import setup_logger
+from services.privacy_filter import privacy_filter_service, PrivacyRegion
+from services.encryption_service import encryption_service
 
 logger = setup_logger(__name__)
 
@@ -83,6 +85,11 @@ class DetectionService:
             logger.info(f"Classes: {list(self.class_names.values())}")
             logger.info(f"Confidence threshold: {settings.confidence_threshold}")
             
+            # Initialize privacy filters
+            logger.info("Initializing privacy filter service...")
+            await privacy_filter_service.initialize()
+            logger.info("Privacy filters ready!")
+            
         except Exception as e:
             logger.error(f"Failed to initialize detection service: {str(e)}")
             raise
@@ -108,17 +115,19 @@ class DetectionService:
     async def detect_from_bytes(
         self,
         image_bytes: bytes,
-        frame_id: Optional[str] = None
-    ) -> Tuple[List[Detection], Optional[bytes]]:
+        frame_id: Optional[str] = None,
+        apply_privacy_filters: bool = True
+    ) -> Tuple[List[Detection], Optional[bytes], Optional[List[dict]]]:
         """
-        Perform detection on image bytes.
+        Perform detection on image bytes with privacy filtering.
         
         Args:
             image_bytes: Raw image bytes
             frame_id: Optional frame identifier for tracking
+            apply_privacy_filters: Whether to apply face/license plate blurring
             
         Returns:
-            Tuple of (detections list, annotated image bytes)
+            Tuple of (detections list, annotated image bytes, privacy regions)
         """
         if not self.model_loaded:
             raise RuntimeError("Model not initialized. Call initialize() first.")
@@ -135,7 +144,15 @@ class DetectionService:
             
             logger.info(f"    Image shape: {img.shape} (HxWxC)")
             
-            # Run detection
+            # Apply privacy filters BEFORE detection
+            privacy_regions = None
+            if apply_privacy_filters:
+                logger.info(f"   🔒 Applying privacy filters...")
+                img, privacy_regions_obj = await privacy_filter_service.apply_privacy_filters(img)
+                privacy_regions = [r.to_dict() for r in privacy_regions_obj] if privacy_regions_obj else None
+                logger.info(f"    Privacy filtering complete")
+            
+            # Run detection on privacy-filtered image
             logger.info(f"   🤖 Running YOLO inference...")
             logger.info(f"      Confidence threshold: {settings.confidence_threshold}")
             logger.info(f"      IOU threshold: {settings.iou_threshold}")
@@ -148,10 +165,10 @@ class DetectionService:
             detections = self._parse_results(results)
             logger.info(f"    Parsed {len(detections)} detections")
             
-            # Annotate image
+            # Annotate image (on already filtered image)
             annotated_bytes = await self._annotate_image(img, results)
             
-            return detections, annotated_bytes
+            return detections, annotated_bytes, privacy_regions
             
         except Exception as e:
             logger.error(f"    Detection error: {str(e)}")
@@ -160,17 +177,21 @@ class DetectionService:
     async def detect_from_base64(
         self,
         base64_str: str,
-        frame_id: Optional[str] = None
-    ) -> Tuple[List[Detection], Optional[str]]:
+        frame_id: Optional[str] = None,
+        apply_privacy_filters: bool = True,
+        encrypt_metadata: bool = True
+    ) -> Tuple[List[Detection], Optional[str], Optional[str]]:
         """
-        Perform detection on base64 encoded image.
+        Perform detection on base64 encoded image with privacy and encryption.
         
         Args:
             base64_str: Base64 encoded image string
             frame_id: Optional frame identifier
+            apply_privacy_filters: Whether to apply face/license plate blurring
+            encrypt_metadata: Whether to encrypt detection metadata
             
         Returns:
-            Tuple of (detections list, annotated image base64)
+            Tuple of (detections list, annotated image base64, encrypted metadata)
         """
         try:
             logger.info(f" [{frame_id}] Received frame for detection")
@@ -186,11 +207,12 @@ class DetectionService:
             image_bytes = base64.b64decode(base64_str)
             logger.info(f"    Decoded to {len(image_bytes)} bytes")
             
-            # Perform detection
+            # Perform detection with privacy filters
             logger.info(f"    Running detection...")
-            detections, annotated_bytes = await self.detect_from_bytes(
+            detections, annotated_bytes, privacy_regions = await self.detect_from_bytes(
                 image_bytes,
-                frame_id
+                frame_id,
+                apply_privacy_filters
             )
             
             logger.info(f"    Found {len(detections)} detections")
@@ -203,8 +225,20 @@ class DetectionService:
                 annotated_base64 = base64.b64encode(annotated_bytes).decode('utf-8')
                 logger.info(f"     Generated annotated image")
             
+            # Encrypt metadata if requested
+            encrypted_metadata = None
+            if encrypt_metadata:
+                metadata = {
+                    'frame_id': frame_id,
+                    'detections': [det.to_dict() for det in detections],
+                    'privacy_regions': privacy_regions,
+                    'timestamp': time.time()
+                }
+                encrypted_metadata = encryption_service.encrypt_metadata(metadata)
+                logger.info(f"    Metadata encrypted")
+            
             logger.info(f" [{frame_id}] Detection complete\n")
-            return detections, annotated_base64
+            return detections, annotated_base64, encrypted_metadata
             
         except Exception as e:
             logger.error(f" [{frame_id}] Base64 detection error: {str(e)}")

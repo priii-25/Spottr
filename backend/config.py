@@ -33,6 +33,15 @@ class Settings(BaseSettings):
     # CORS
     cors_origins: str = "*"
     
+    # Privacy & Security
+    enable_face_blur: bool = True
+    enable_plate_blur: bool = True
+    blur_strength: int = 99  # Must be odd number
+    min_face_confidence: float = 0.9
+    min_plate_confidence: float = 0.5
+    encrypt_metadata: bool = True
+    encryption_key: str = "spottr_secure_detection_key_2024"
+    
     # Logging
     log_level: str = "INFO"
     log_file: str = "logs/detection.log"

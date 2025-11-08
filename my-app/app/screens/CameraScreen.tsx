@@ -1,5 +1,6 @@
 import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Alert, Modal, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
@@ -32,7 +33,8 @@ export default function CameraScreen() {
   const [processingStats, setProcessingStats] = useState({
     fps: 0,
     avgLatency: 0,
-    totalDetections: 0
+    totalDetections: 0,
+    privacyProtected: false
   });
   
   const cameraRef = useRef<CameraView>(null);
@@ -144,6 +146,7 @@ export default function CameraScreen() {
         fps: response.processing_time_ms ? Math.round(1000 / response.processing_time_ms) : prev.fps,
         avgLatency: response.processing_time_ms || prev.avgLatency,
         totalDetections: detectionCountRef.current,
+        privacyProtected: response.privacy_protected || false
       }));
 
       console.log('📊 Updated stats:', {
@@ -390,20 +393,21 @@ export default function CameraScreen() {
   const handleCancelDetection = () => {
     setShowConfirmModal(false);
     setCapturedImage(null);
-  };
+  }
 
   return (
     <LinearGradient
       colors={gradients.screen}
       style={styles.container}
     >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <StatusBar />
-        <ScreenTitle title="Live Detection" />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <StatusBar />
+          <ScreenTitle title="AI Camera Detection" />
         
         <View style={commonStyles.cameraView}>
           {isRecording && permission?.granted ? (
@@ -422,11 +426,21 @@ export default function CameraScreen() {
               
               {/* Stats overlay */}
               {isConnected && (
-                <View style={styles.statsOverlay}>
-                  <Text style={styles.statsText}>
-                    {processingStats.avgLatency.toFixed(0)}ms • {processingStats.totalDetections} detected
-                  </Text>
-                </View>
+                <>
+                  <View style={styles.statsOverlay}>
+                    <Text style={styles.statsText}>
+                      {processingStats.avgLatency.toFixed(0)}ms • {processingStats.totalDetections} detected
+                    </Text>
+                  </View>
+                  
+                  {/* Privacy indicator */}
+                  {DETECTION_CONFIG.showPrivacyIndicator && processingStats.privacyProtected && (
+                    <View style={styles.privacyBadge}>
+                      <Text style={styles.privacyIcon}>🔒</Text>
+                      <Text style={styles.privacyText}>Privacy Protected</Text>
+                    </View>
+                  )}
+                </>
               )}
               
               <TouchableOpacity 
@@ -515,7 +529,8 @@ export default function CameraScreen() {
         )}
         
         <View style={{ height: 80 }} />
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
 
       {/* Confirmation Modal */}
       <Modal
@@ -569,6 +584,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  safeArea: {
+    flex: 1,
+  },
   scrollView: {
     flex: 1,
   },
@@ -597,6 +615,27 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 11,
     fontWeight: '600',
+  },
+  privacyBadge: {
+    position: 'absolute',
+    top: 85,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(76, 175, 80, 0.9)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  privacyIcon: {
+    fontSize: 12,
+  },
+  privacyText: {
+    color: '#ffffff',
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
   },
   cameraContainer: {
     width: '100%',

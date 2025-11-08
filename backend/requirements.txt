@@ -12,6 +12,14 @@ Pillow==10.4.0
 torch==2.5.1
 torchvision==0.20.1
 
+# Privacy & Face Detection
+mtcnn==0.1.1
+pytesseract==0.3.13
+easyocr==1.7.2
+
+# Encryption
+cryptography==44.0.0
+
 # Async & Performance
 aiofiles==24.1.0
 python-jose[cryptography]==3.3.0

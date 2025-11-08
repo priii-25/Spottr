@@ -1,5 +1,6 @@
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import Toggle from '@/components/Toggle';
@@ -11,13 +12,14 @@ export default function SettingsScreen() {
       colors={gradients.screen}
       style={styles.container}
     >
-      <ScrollView 
-        style={styles.scrollView}
-        contentContainerStyle={styles.contentContainer}
-        showsVerticalScrollIndicator={false}
-      >
-        <StatusBar />
-        <ScreenTitle title="Settings" />
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView 
+          style={styles.scrollView}
+          contentContainerStyle={styles.contentContainer}
+          showsVerticalScrollIndicator={false}
+        >
+          <StatusBar />
+          <ScreenTitle title="Settings" />
         
         <View style={commonStyles.settingsSection}>
           <View style={commonStyles.settingsItem}>
@@ -54,13 +56,17 @@ export default function SettingsScreen() {
         </View>
         
         <View style={{ height: 80 }} />
-      </ScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  safeArea: {
     flex: 1,
   },
   scrollView: {
