@@ -16,6 +16,19 @@ torchvision==0.20.1
 mediapipe==0.10.14
 easyocr==1.7.2
 
+# Segmentation & Depth Estimation
+segment-anything==1.0
+timm==0.9.16
+# For MobileSAM (lightweight variant)
+mobile-sam==0.1.0
+
+# Depth Estimation
+# Note: MiDaS is integrated with timm
+
+# Weather API
+requests==2.31.0
+aiohttp==3.9.5
+
 # Encryption
 cryptography==44.0.0
 

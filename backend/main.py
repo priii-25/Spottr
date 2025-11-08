@@ -8,6 +8,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import uvicorn
+import numpy as np
 
 from config import settings
 from logger import setup_logger
@@ -15,6 +16,7 @@ from services.detection_service import detection_service
 from services.websocket_manager import connection_manager
 from services.privacy_filter import privacy_filter_service
 from services.crowd_intelligence import crowd_intelligence_service, FeedbackType
+from services.severity_assessment import severity_service
 
 logger = setup_logger(__name__)
 
@@ -32,6 +34,10 @@ async def lifespan(app: FastAPI):
         logger.info("Detection service initialized successfully")
         logger.info(f"Privacy features: Face blur={settings.enable_face_blur}, Plate blur={settings.enable_plate_blur}")
         logger.info(f"Encryption enabled: {settings.encrypt_metadata}")
+        
+        # Initialize severity assessment service
+        await severity_service.initialize()
+        logger.info("Severity assessment service initialized")
     except Exception as e:
         logger.error(f"Failed to initialize: {str(e)}")
         raise
@@ -311,6 +317,66 @@ async def get_user_contribution(user_id: str):
         }
     except Exception as e:
         logger.error(f"Failed to get user contribution: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ==================== Severity Assessment API ====================
+
+@app.post("/hazards/{hazard_id}/assess_severity")
+async def assess_hazard_severity(
+    hazard_id: str,
+    vehicle_speed: Optional[float] = None,
+    time_of_day: Optional[str] = None
+):
+    """
+    Perform detailed severity assessment for a hazard.
+    
+    Args:
+        hazard_id: Hazard identifier
+        vehicle_speed: Current vehicle speed (km/h)
+        time_of_day: Time context (morning/afternoon/evening/night)
+    
+    Returns:
+        Detailed severity assessment with segmentation, depth, and weather data
+    """
+    try:
+        # Get hazard from crowd intelligence
+        hazard = await crowd_intelligence_service.get_hazard(hazard_id)
+        if not hazard:
+            raise HTTPException(status_code=404, detail="Hazard not found")
+        
+        # Note: In production, you'd need to store the image
+        # For now, we'll create a mock assessment
+        logger.info(f"Severity assessment requested for {hazard_id}")
+        logger.info(f"  Vehicle speed: {vehicle_speed} km/h")
+        logger.info(f"  Time: {time_of_day}")
+        
+        # Mock image for assessment (in production, retrieve actual image)
+        import cv2
+        mock_image = np.zeros((480, 640, 3), dtype=np.uint8)
+        
+        # Perform assessment
+        assessment = await severity_service.assess_severity(
+            image=mock_image,
+            bbox=[100, 100, 300, 300],
+            class_name=hazard.class_name,
+            confidence=hazard.initial_confidence,
+            latitude=hazard.latitude,
+            longitude=hazard.longitude,
+            vehicle_speed=vehicle_speed,
+            time_of_day=time_of_day
+        )
+        
+        return {
+            "success": True,
+            "hazard_id": hazard_id,
+            "assessment": assessment.to_dict()
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Severity assessment failed: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
