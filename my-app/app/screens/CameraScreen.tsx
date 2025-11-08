@@ -4,12 +4,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
+import * as ExpoLocation from 'expo-location';
 import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import Button from '@/components/Button';
 import { commonStyles, gradients, colors } from '@/constants/styles';
-import { DetectionWebSocketClient, Detection as ServerDetection, DetectionResponse } from '@/services/detection-client';
+import { DetectionWebSocketClient, Detection as ServerDetection, DetectionResponse, Location } from '@/services/detection-client';
 import { DETECTION_SERVICE_URL, DETECTION_CONFIG, HAZARD_ICONS } from '@/services/detection-config';
 
 interface Detection {
@@ -19,10 +20,12 @@ interface Detection {
   confidence: number;
   image?: string;
   bbox?: [number, number, number, number];
+  location?: Location;
 }
 
 export default function CameraScreen() {
   const [permission, requestPermission] = useCameraPermissions();
+  const [locationPermission, requestLocationPermission] = ExpoLocation.useForegroundPermissions();
   const [isRecording, setIsRecording] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [isConnected, setIsConnected] = useState(false);
@@ -30,6 +33,7 @@ export default function CameraScreen() {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [detectedType, setDetectedType] = useState('Pothole');
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [processingStats, setProcessingStats] = useState({
     fps: 0,
     avgLatency: 0,
@@ -42,6 +46,54 @@ export default function CameraScreen() {
   const frameIntervalRef = useRef<any>(null);
   const lastFrameTimeRef = useRef<number>(0);
   const detectionCountRef = useRef<number>(0);
+
+  // Initialize location tracking
+  useEffect(() => {
+    let locationSubscription: ExpoLocation.LocationSubscription | null = null;
+
+    const startLocationTracking = async () => {
+      try {
+        // Request location permission if not granted
+        if (!locationPermission?.granted) {
+          const { status } = await requestLocationPermission();
+          if (status !== 'granted') {
+            console.warn('Location permission not granted');
+            return;
+          }
+        }
+
+        // Start watching location
+        locationSubscription = await ExpoLocation.watchPositionAsync(
+          {
+            accuracy: ExpoLocation.Accuracy.High,
+            timeInterval: 1000, // Update every second
+            distanceInterval: 5, // Or every 5 meters
+          },
+          (location: ExpoLocation.LocationObject) => {
+            setCurrentLocation({
+              latitude: location.coords.latitude,
+              longitude: location.coords.longitude,
+              altitude: location.coords.altitude ?? undefined,
+              accuracy: location.coords.accuracy ?? undefined,
+            });
+          }
+        );
+
+        console.log('📍 Location tracking started');
+      } catch (error) {
+        console.error('Failed to start location tracking:', error);
+      }
+    };
+
+    startLocationTracking();
+
+    return () => {
+      // Cleanup location tracking
+      if (locationSubscription) {
+        locationSubscription.remove();
+      }
+    };
+  }, [locationPermission]);
 
   // Initialize WebSocket connection
   useEffect(() => {
@@ -134,6 +186,7 @@ export default function CameraScreen() {
         timestamp: 'Just now',
         confidence: Math.round(det.confidence * 100),
         bbox: det.bbox,
+        location: det.location,
       }));
 
       console.log('💾 Adding to UI detection list...');
@@ -230,9 +283,13 @@ export default function CameraScreen() {
         await wsClientRef.current.detectFrame(
           photo.base64,
           `frame_${now}`,
-          DETECTION_CONFIG.includeAnnotatedImage
+          DETECTION_CONFIG.includeAnnotatedImage,
+          currentLocation ?? undefined
         );
         console.log('✅ Frame sent successfully!');
+        if (currentLocation) {
+          console.log(`📍 With GPS: (${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)})`);
+        }
       } else {
         console.error('❌ No photo or base64 data available');
       }
@@ -335,7 +392,12 @@ export default function CameraScreen() {
           if (wsClientRef.current && isConnected && photo.base64) {
             try {
               // Send for detection (this will trigger handleDetectionResponse)
-              await wsClientRef.current.detectFrame(photo.base64, `manual_${Date.now()}`, true);
+              await wsClientRef.current.detectFrame(
+                photo.base64, 
+                `manual_${Date.now()}`, 
+                true,
+                currentLocation ?? undefined
+              );
               
               // Wait a moment for detection response
               setTimeout(() => {
@@ -433,6 +495,19 @@ export default function CameraScreen() {
                     </Text>
                   </View>
                   
+                  {/* GPS indicator */}
+                  {currentLocation && (
+                    <View style={styles.gpsBadge}>
+                      <Text style={styles.gpsIcon}>📍</Text>
+                      <Text style={styles.gpsText}>
+                        GPS: {currentLocation.latitude.toFixed(5)}, {currentLocation.longitude.toFixed(5)}
+                      </Text>
+                      {currentLocation.accuracy && (
+                        <Text style={styles.gpsAccuracy}>±{currentLocation.accuracy.toFixed(0)}m</Text>
+                      )}
+                    </View>
+                  )}
+                  
                   {/* Privacy indicator */}
                   {DETECTION_CONFIG.showPrivacyIndicator && processingStats.privacyProtected && (
                     <View style={styles.privacyBadge}>
@@ -506,9 +581,14 @@ export default function CameraScreen() {
                 <View key={detection.id} style={[commonStyles.listItem, { marginBottom: 6 }]}>
                   <View style={styles.detectionItem}>
                     <Text style={styles.detectionIcon}>{icon}</Text>
-                    <View>
+                    <View style={{ flex: 1 }}>
                       <Text style={commonStyles.listItemText}>{detection.type}</Text>
                       <Text style={styles.confidenceText}>Confidence: {detection.confidence}%</Text>
+                      {detection.location && (
+                        <Text style={styles.confidenceText}>
+                          📍 {detection.location.latitude.toFixed(5)}, {detection.location.longitude.toFixed(5)}
+                        </Text>
+                      )}
                     </View>
                   </View>
                   <Text style={commonStyles.listItemSubtext}>{detection.timestamp}</Text>
@@ -616,9 +696,34 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
   },
-  privacyBadge: {
+  gpsBadge: {
     position: 'absolute',
     top: 85,
+    alignSelf: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  gpsIcon: {
+    fontSize: 14,
+  },
+  gpsText: {
+    color: colors.primary,
+    fontSize: 9,
+    fontWeight: '600',
+  },
+  gpsAccuracy: {
+    color: '#999',
+    fontSize: 8,
+    marginLeft: 4,
+  },
+  privacyBadge: {
+    position: 'absolute',
+    top: 120,
     alignSelf: 'center',
     backgroundColor: 'rgba(76, 175, 80, 0.9)',
     paddingHorizontal: 10,

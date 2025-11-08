@@ -29,23 +29,44 @@ class Detection:
         class_name: str,
         confidence: float,
         bbox: List[float],
-        timestamp: float
+        timestamp: float,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        altitude: Optional[float] = None,
+        accuracy: Optional[float] = None
     ):
         self.class_id = class_id
         self.class_name = class_name
         self.confidence = confidence
         self.bbox = bbox  # [x1, y1, x2, y2]
         self.timestamp = timestamp
+        self.latitude = latitude
+        self.longitude = longitude
+        self.altitude = altitude
+        self.accuracy = accuracy
     
     def to_dict(self) -> Dict:
         """Convert detection to dictionary."""
-        return {
+        result = {
             'class_id': self.class_id,
             'class_name': self.class_name,
             'confidence': round(self.confidence, 3),
             'bbox': [round(coord, 2) for coord in self.bbox],
             'timestamp': self.timestamp
         }
+        
+        # Add location data if available
+        if self.latitude is not None and self.longitude is not None:
+            result['location'] = {
+                'latitude': round(self.latitude, 6),
+                'longitude': round(self.longitude, 6)
+            }
+            if self.altitude is not None:
+                result['location']['altitude'] = round(self.altitude, 2)
+            if self.accuracy is not None:
+                result['location']['accuracy'] = round(self.accuracy, 2)
+        
+        return result
 
 
 class DetectionService:
@@ -179,7 +200,11 @@ class DetectionService:
         base64_str: str,
         frame_id: Optional[str] = None,
         apply_privacy_filters: bool = True,
-        encrypt_metadata: bool = True
+        encrypt_metadata: bool = True,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        altitude: Optional[float] = None,
+        accuracy: Optional[float] = None
     ) -> Tuple[List[Detection], Optional[str], Optional[str]]:
         """
         Perform detection on base64 encoded image with privacy and encryption.
@@ -189,6 +214,10 @@ class DetectionService:
             frame_id: Optional frame identifier
             apply_privacy_filters: Whether to apply face/license plate blurring
             encrypt_metadata: Whether to encrypt detection metadata
+            latitude: GPS latitude coordinate
+            longitude: GPS longitude coordinate
+            altitude: GPS altitude in meters
+            accuracy: GPS accuracy in meters
             
         Returns:
             Tuple of (detections list, annotated image base64, encrypted metadata)
@@ -215,9 +244,21 @@ class DetectionService:
                 apply_privacy_filters
             )
             
+            # Add GPS location to detections
+            if latitude is not None and longitude is not None:
+                logger.info(f"    📍 GPS Location: {latitude:.6f}, {longitude:.6f}")
+                if accuracy is not None:
+                    logger.info(f"       Accuracy: ±{accuracy:.2f}m")
+                for det in detections:
+                    det.latitude = latitude
+                    det.longitude = longitude
+                    det.altitude = altitude
+                    det.accuracy = accuracy
+            
             logger.info(f"    Found {len(detections)} detections")
             for det in detections:
-                logger.info(f"      - {det.class_name}: {det.confidence:.2%} at {det.bbox}")
+                location_str = f" @ ({det.latitude:.6f}, {det.longitude:.6f})" if det.latitude else ""
+                logger.info(f"      - {det.class_name}: {det.confidence:.2%} at {det.bbox}{location_str}")
             
             # Convert annotated image back to base64
             annotated_base64 = None
@@ -232,7 +273,13 @@ class DetectionService:
                     'frame_id': frame_id,
                     'detections': [det.to_dict() for det in detections],
                     'privacy_regions': privacy_regions,
-                    'timestamp': time.time()
+                    'timestamp': time.time(),
+                    'location': {
+                        'latitude': latitude,
+                        'longitude': longitude,
+                        'altitude': altitude,
+                        'accuracy': accuracy
+                    } if latitude is not None and longitude is not None else None
                 }
                 encrypted_metadata = encryption_service.encrypt_metadata(metadata)
                 logger.info(f"    Metadata encrypted")

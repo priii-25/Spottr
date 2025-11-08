@@ -2,7 +2,7 @@
 import asyncio
 import time
 from contextlib import asynccontextmanager
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -14,6 +14,7 @@ from logger import setup_logger
 from services.detection_service import detection_service
 from services.websocket_manager import connection_manager
 from services.privacy_filter import privacy_filter_service
+from services.crowd_intelligence import crowd_intelligence_service, FeedbackType
 
 logger = setup_logger(__name__)
 
@@ -121,6 +122,196 @@ async def model_info():
 async def connection_stats():
     """Get WebSocket connection statistics."""
     return connection_manager.get_stats()
+
+
+# ==================== Crowd Intelligence API ====================
+
+@app.post("/hazards")
+async def report_hazard(
+    class_name: str,
+    confidence: float,
+    latitude: float,
+    longitude: float,
+    bbox: List[float],
+    user_id: Optional[str] = None
+):
+    """
+    Report a new hazard detection.
+    
+    Args:
+        class_name: Type of hazard
+        confidence: AI confidence score
+        latitude: Hazard latitude
+        longitude: Hazard longitude
+        bbox: Bounding box [x1, y1, x2, y2]
+        user_id: Optional user identifier
+    """
+    try:
+        import uuid
+        hazard_id = f"hazard_{uuid.uuid4().hex[:12]}"
+        
+        hazard = await crowd_intelligence_service.add_hazard(
+            hazard_id=hazard_id,
+            class_name=class_name,
+            confidence=confidence,
+            location=(latitude, longitude),
+            bbox=bbox,
+            user_id=user_id
+        )
+        
+        return {
+            "success": True,
+            "hazard": hazard.to_dict(),
+            "message": "Hazard reported successfully"
+        }
+    except Exception as e:
+        logger.error(f"Failed to report hazard: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/hazards/nearby")
+async def get_nearby_hazards(
+    latitude: float,
+    longitude: float,
+    radius: float = 500.0,
+    include_resolved: bool = False
+):
+    """
+    Get hazards near a location.
+    
+    Args:
+        latitude: Search center latitude
+        longitude: Search center longitude
+        radius: Search radius in meters (default 500m)
+        include_resolved: Include resolved hazards
+    """
+    try:
+        hazards = await crowd_intelligence_service.get_hazards_nearby(
+            location=(latitude, longitude),
+            radius_meters=radius,
+            include_resolved=include_resolved
+        )
+        
+        return {
+            "success": True,
+            "count": len(hazards),
+            "hazards": [h.to_dict() for h in hazards]
+        }
+    except Exception as e:
+        logger.error(f"Failed to get nearby hazards: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/hazards/{hazard_id}")
+async def get_hazard_details(hazard_id: str):
+    """Get detailed information about a specific hazard."""
+    try:
+        hazard = await crowd_intelligence_service.get_hazard(hazard_id)
+        
+        if not hazard:
+            raise HTTPException(status_code=404, detail="Hazard not found")
+        
+        return {
+            "success": True,
+            "hazard": hazard.to_dict()
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to get hazard details: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/hazards/{hazard_id}/feedback")
+async def submit_hazard_feedback(
+    hazard_id: str,
+    user_id: str,
+    feedback_type: str,
+    latitude: Optional[float] = None,
+    longitude: Optional[float] = None,
+    confidence: float = 1.0,
+    comment: Optional[str] = None
+):
+    """
+    Submit user feedback for a hazard.
+    
+    Args:
+        hazard_id: ID of hazard to provide feedback on
+        user_id: User providing feedback
+        feedback_type: Type of feedback (confirm, deny, update, resolve)
+        latitude: User's current latitude
+        longitude: User's current longitude
+        confidence: User's confidence in feedback (0-1)
+        comment: Optional comment
+    """
+    try:
+        # Validate feedback type
+        try:
+            feedback_enum = FeedbackType[feedback_type.upper()]
+        except KeyError:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid feedback type. Must be one of: {[f.value for f in FeedbackType]}"
+            )
+        
+        # Get user location if provided
+        user_location = None
+        if latitude is not None and longitude is not None:
+            user_location = (latitude, longitude)
+        
+        hazard = await crowd_intelligence_service.submit_feedback(
+            hazard_id=hazard_id,
+            user_id=user_id,
+            feedback_type=feedback_enum,
+            user_location=user_location,
+            confidence=confidence,
+            comment=comment
+        )
+        
+        if not hazard:
+            raise HTTPException(
+                status_code=404,
+                detail="Hazard not found or user too far away"
+            )
+        
+        return {
+            "success": True,
+            "hazard": hazard.to_dict(),
+            "message": f"Feedback ({feedback_type}) submitted successfully"
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Failed to submit feedback: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/crowd/stats")
+async def get_crowd_stats():
+    """Get crowd intelligence statistics."""
+    try:
+        stats = crowd_intelligence_service.get_stats()
+        return {
+            "success": True,
+            "stats": stats
+        }
+    except Exception as e:
+        logger.error(f"Failed to get crowd stats: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/users/{user_id}/contribution")
+async def get_user_contribution(user_id: str):
+    """Get user's contribution statistics."""
+    try:
+        contribution = crowd_intelligence_service.get_user_contribution(user_id)
+        return {
+            "success": True,
+            "contribution": contribution
+        }
+    except Exception as e:
+        logger.error(f"Failed to get user contribution: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.websocket("/ws/detect/{client_id}")
@@ -243,11 +434,22 @@ async def process_frame(client_id: str, data: dict):
         frame_id = data.get('frame_id', f"frame_{int(time.time() * 1000)}")
         include_annotated = data.get('include_annotated', False)
         
+        # Extract GPS location if provided
+        location = data.get('location', {})
+        latitude = location.get('latitude')
+        longitude = location.get('longitude')
+        altitude = location.get('altitude')
+        accuracy = location.get('accuracy')
+        
         logger.info(f" Frame metadata:")
         logger.info(f"   Frame ID: {frame_id}")
         logger.info(f"   Timestamp: {data.get('timestamp', 'N/A')}")
         logger.info(f"   Include annotated: {include_annotated}")
         logger.info(f"   Data present: {frame_data is not None}")
+        if latitude is not None and longitude is not None:
+            logger.info(f"   📍 GPS Location: ({latitude:.6f}, {longitude:.6f})")
+            if accuracy is not None:
+                logger.info(f"      Accuracy: ±{accuracy:.2f}m")
         
         if not frame_data:
             logger.error(f" No frame data provided!")
@@ -259,13 +461,17 @@ async def process_frame(client_id: str, data: dict):
         
         logger.info(f"   Data length: {len(frame_data)} chars")
         
-        # Perform detection with privacy filters and encryption
+        # Perform detection with privacy filters, encryption, and GPS location
         logger.info(f"\n Starting detection pipeline with privacy filters...")
         detections, annotated_base64, encrypted_metadata = await detection_service.detect_from_base64(
             frame_data,
             frame_id=frame_id,
             apply_privacy_filters=True,
-            encrypt_metadata=True
+            encrypt_metadata=True,
+            latitude=latitude,
+            longitude=longitude,
+            altitude=altitude,
+            accuracy=accuracy
         )
         
         processing_time = (time.time() - start_time) * 1000

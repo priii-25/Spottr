@@ -2,12 +2,20 @@
  * WebSocket client for real-time detection service
  */
 
+export interface Location {
+  latitude: number;
+  longitude: number;
+  altitude?: number;
+  accuracy?: number;
+}
+
 export interface Detection {
   class_id: number;
   class_name: string;
   confidence: number;
   bbox: [number, number, number, number];
   timestamp: number;
+  location?: Location;
 }
 
 export interface DetectionResponse {
@@ -136,7 +144,8 @@ export class DetectionWebSocketClient {
   async detectFrame(
     base64Image: string,
     frameId?: string,
-    includeAnnotated: boolean = false
+    includeAnnotated: boolean = false,
+    location?: Location
   ): Promise<void> {
     if (!this.isConnected || !this.ws) {
       console.error('[DetectionWS] ❌ Cannot send frame: Not connected');
@@ -154,6 +163,12 @@ export class DetectionWebSocketClient {
     console.log(`   Timestamp: ${timestamp}`);
     console.log(`   Base64 length: ${base64Image.length} chars`);
     console.log(`   Include annotated: ${includeAnnotated}`);
+    if (location) {
+      console.log(`   📍 GPS Location: (${location.latitude.toFixed(6)}, ${location.longitude.toFixed(6)})`);
+      if (location.accuracy) {
+        console.log(`      Accuracy: ±${location.accuracy.toFixed(2)}m`);
+      }
+    }
     console.log(`   WebSocket state: ${this.ws.readyState} (1=OPEN)`);
 
     const message = {
@@ -162,6 +177,7 @@ export class DetectionWebSocketClient {
       frame_id: actualFrameId,
       timestamp: timestamp,
       include_annotated: includeAnnotated,
+      location: location,
     };
 
     console.log('📦 Message structure:', {
@@ -170,6 +186,7 @@ export class DetectionWebSocketClient {
       timestamp: message.timestamp,
       include_annotated: message.include_annotated,
       data_length: message.data.length,
+      has_location: !!location,
     });
 
     this.send(message);
