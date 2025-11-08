@@ -7,7 +7,7 @@ import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import { commonStyles, gradients, colors } from '@/constants/styles';
-import { DETECTION_SERVICE_URL, HAZARD_ICONS } from '@/services/detection-config';
+import { API_BASE_URL, HAZARD_ICONS } from '@/services/detection-config';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -45,7 +45,7 @@ export default function HazardDetailScreen() {
       const timeOfDay = getTimeOfDay();
 
       const response = await fetch(
-        `${DETECTION_SERVICE_URL}/hazards/${hazardId}/assess_severity?vehicle_speed=${vehicleSpeed}&time_of_day=${timeOfDay}`,
+        `${API_BASE_URL}/hazards/${hazardId}/assess_severity?vehicle_speed=${vehicleSpeed}&time_of_day=${timeOfDay}`,
         { method: 'POST' }
       );
 

@@ -4,14 +4,20 @@
 
 // Get local IP for development
 // Update this with your computer's local IP when running backend
-export const DETECTION_SERVICE_URL = __DEV__
-  ? 'ws://10.7.10.20:8000' // Your local IP - Backend running on this machine
-  : 'wss://your-production-url.com'; // Update for production
+const BASE_URL = __DEV__
+  ? 'http://10.7.10.20:8000' // Your local IP - Backend running on this machine
+  : 'https://your-production-url.com'; // Update for production
+
+// WebSocket URL (for camera detection)
+export const DETECTION_SERVICE_URL = BASE_URL.replace('http', 'ws');
+
+// HTTP API URL (for crowd intelligence and severity assessment)
+export const API_BASE_URL = BASE_URL;
 
 export const DETECTION_CONFIG = {
   // Frame processing
-  maxFrameRate: 5, // Process max 5 frames per second
-  frameQualityJpeg: 0.8, // JPEG quality (0.0 - 1.0)
+  maxFrameRate: 2, // Process max 2 frames per second (reduced for CPU)
+  frameQualityJpeg: 0.6, // JPEG quality (0.0 - 1.0) - reduced for faster processing
   frameWidth: 640, // Resize frame width for faster processing
   frameHeight: 480, // Resize frame height
   
@@ -20,7 +26,7 @@ export const DETECTION_CONFIG = {
   includeAnnotatedImage: false, // Set to true to receive annotated frames
   
   // Privacy & Security
-  enablePrivacyFilters: true, // Enable face and license plate blurring
+  enablePrivacyFilters: false, // Disable for faster processing (Enable later with GPU)
   encryptMetadata: true, // Encrypt detection metadata
   noRawFootageTransmission: true, // Only send metadata, not raw video
   

@@ -5,6 +5,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import * as FileSystem from 'expo-file-system';
 import * as ExpoLocation from 'expo-location';
+import * as ImageManipulator from 'expo-image-manipulator';
 import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
@@ -259,39 +260,69 @@ export default function CameraScreen() {
 
       // Take picture
       console.log('📷 Taking picture...');
+      
+      if (!cameraRef.current) {
+        console.error('❌ Camera ref is null!');
+        return;
+      }
+      
       const photo = await cameraRef.current.takePictureAsync({
         quality: DETECTION_CONFIG.frameQualityJpeg,
-        base64: true,
-        skipProcessing: true,
+        base64: false, // Don't get base64 yet - we'll resize first
+        skipProcessing: false,
+        exif: false,
       });
 
       console.log('✅ Picture captured:', {
         hasPhoto: !!photo,
-        hasBase64: !!photo?.base64,
         uri: photo?.uri,
         width: photo?.width,
         height: photo?.height,
       });
 
-      if (photo && photo.base64) {
-        console.log('📦 Base64 data:', {
-          length: photo.base64.length,
-          preview: photo.base64.substring(0, 50) + '...',
-        });
+      if (!photo?.uri) {
+        console.error('❌ No photo URI available');
+        return;
+      }
 
-        console.log('🚀 Sending frame to WebSocket client...');
-        await wsClientRef.current.detectFrame(
-          photo.base64,
-          `frame_${now}`,
-          DETECTION_CONFIG.includeAnnotatedImage,
-          currentLocation ?? undefined
-        );
-        console.log('✅ Frame sent successfully!');
-        if (currentLocation) {
-          console.log(`📍 With GPS: (${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)})`);
+      // Resize image to target resolution (640x480) for faster processing
+      console.log('🔄 Resizing image to 640x480...');
+      const resizedImage = await ImageManipulator.manipulateAsync(
+        photo.uri,
+        [{ resize: { width: 640, height: 480 } }],
+        { 
+          compress: DETECTION_CONFIG.frameQualityJpeg, 
+          format: ImageManipulator.SaveFormat.JPEG 
         }
-      } else {
-        console.error('❌ No photo or base64 data available');
+      );
+
+      console.log('✅ Image resized:', {
+        uri: resizedImage.uri,
+        width: resizedImage.width,
+        height: resizedImage.height,
+      });
+
+      // Convert resized image to base64
+      console.log('🔄 Converting to base64...');
+      const base64 = await FileSystem.readAsStringAsync(resizedImage.uri, {
+        encoding: 'base64',
+      });
+
+      console.log('📦 Base64 data:', {
+        length: base64.length,
+        preview: base64.substring(0, 50) + '...',
+      });
+
+      console.log('🚀 Sending frame to WebSocket client...');
+      await wsClientRef.current.detectFrame(
+        base64,
+        `frame_${now}`,
+        DETECTION_CONFIG.includeAnnotatedImage,
+        currentLocation ?? undefined
+      );
+      console.log('✅ Frame sent successfully!');
+      if (currentLocation) {
+        console.log(`📍 With GPS: (${currentLocation.latitude.toFixed(6)}, ${currentLocation.longitude.toFixed(6)})`);
       }
       console.log('='.repeat(60) + '\n');
     } catch (error) {

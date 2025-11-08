@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.backends import default_backend
 import os
 
@@ -50,7 +50,7 @@ class EncryptionService:
             # Use fixed salt for consistency (in production, store this securely)
             salt = b'spottr_privacy_salt_2024'
         
-        kdf = PBKDF2(
+        kdf = PBKDF2HMAC(
             algorithm=hashes.SHA256(),
             length=32,
             salt=salt,

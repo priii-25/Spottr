@@ -8,7 +8,7 @@ import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import StatBox from '@/components/StatBox';
 import { commonStyles, gradients, colors } from '@/constants/styles';
-import { DETECTION_SERVICE_URL, HAZARD_ICONS } from '@/services/detection-config';
+import { API_BASE_URL, HAZARD_ICONS } from '@/services/detection-config';
 import { 
   CrowdIntelligenceClient, 
   Hazard, 
@@ -26,7 +26,7 @@ export default function CommunityScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [userId] = useState(`user_${Date.now()}`); // In production, use actual user ID
   
-  const crowdClient = new CrowdIntelligenceClient(DETECTION_SERVICE_URL);
+  const crowdClient = new CrowdIntelligenceClient(API_BASE_URL);
 
   // Mock location (in production, use actual GPS)
   const mockLocation = { latitude: 37.7749, longitude: -122.4194 };
