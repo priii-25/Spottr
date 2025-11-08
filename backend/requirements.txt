@@ -13,8 +13,7 @@ torch==2.5.1
 torchvision==0.20.1
 
 # Privacy & Face Detection
-mtcnn==0.1.1
-pytesseract==0.3.13
+mediapipe==0.10.14
 easyocr==1.7.2
 
 # Encryption
