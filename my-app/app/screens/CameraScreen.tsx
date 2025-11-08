@@ -566,6 +566,15 @@ export default function CameraScreen() {
           centered 
         />
         
+        {/* GPS Status Badge */}
+        <View style={styles.statusRow}>
+          <AIBadge 
+            text={currentLocation ? `📍 GPS Active (±${currentLocation.accuracy?.toFixed(0) || '?'}m)` : "📍 GPS Searching..."} 
+            fullWidth 
+            centered 
+          />
+        </View>
+        
         <View style={styles.recentSection}>
           <Text style={styles.recentTitle}>
             Recent Detections {detections.length > 0 && `(${detections.length})`}
@@ -827,6 +836,10 @@ const styles = StyleSheet.create({
     color: colors.primary,
     fontSize: 12,
     fontWeight: '600',
+  },
+  statusRow: {
+    marginTop: 8,
+    marginBottom: 8,
   },
   modalOverlay: {
     flex: 1,
