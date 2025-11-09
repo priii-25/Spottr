@@ -212,6 +212,44 @@ export default function CommunityScreen() {
         
         <AIBadge text="Community-Verified Hazards" fullWidth centered />
         
+        {/* Impact Dashboard */}
+        <View style={styles.impactSection}>
+          <Text style={styles.impactTitle}>🌍 Community Impact</Text>
+          <Text style={styles.impactSubtitle}>Your collective contribution to road safety</Text>
+          
+          <View style={styles.impactGrid}>
+            <View style={styles.impactCard}>
+              <Text style={styles.impactIcon}>🚗</Text>
+              <Text style={styles.impactNumber}>1</Text>
+              <Text style={styles.impactLabel}>Drivers Warned</Text>
+            </View>
+            
+            <View style={styles.impactCard}>
+              <Text style={styles.impactIcon}>🛡️</Text>
+              <Text style={styles.impactNumber}>0</Text>
+              <Text style={styles.impactLabel}>Accidents Prevented</Text>
+            </View>
+            
+            <View style={styles.impactCard}>
+              <Text style={styles.impactIcon}>⏱️</Text>
+              <Text style={styles.impactNumber}>2</Text>
+              <Text style={styles.impactLabel}>Your contributions</Text>
+            </View>
+            
+            <View style={styles.impactCard}>
+              <Text style={styles.impactIcon}>🌱</Text>
+              <Text style={styles.impactNumber}>7</Text>
+              <Text style={styles.impactLabel}>Your verified hazards</Text>
+            </View>
+          </View>
+          
+          <View style={styles.impactHighlight}>
+            <Text style={styles.highlightText}>
+              💡 Together, we've made roads safer for <Text style={styles.highlightBold}>2,500+</Text> community members
+            </Text>
+          </View>
+        </View>
+        
         {/* Statistics */}
         {stats && (
           <View style={commonStyles.statGrid}>
@@ -324,6 +362,78 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: 'rgba(0, 245, 255, 0.2)',
+  },
+  impactSection: {
+    backgroundColor: 'rgba(26, 26, 46, 0.7)',
+    padding: 18,
+    borderRadius: 16,
+    marginBottom: 16,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 245, 255, 0.3)',
+  },
+  impactTitle: {
+    fontSize: 18,
+    color: colors.white,
+    fontWeight: '700',
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  impactSubtitle: {
+    fontSize: 12,
+    color: colors.white,
+    opacity: 0.7,
+    textAlign: 'center',
+    marginBottom: 16,
+  },
+  impactGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginBottom: 14,
+  },
+  impactCard: {
+    flex: 1,
+    minWidth: '45%',
+    backgroundColor: 'rgba(0, 245, 255, 0.08)',
+    padding: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 245, 255, 0.15)',
+  },
+  impactIcon: {
+    fontSize: 28,
+    marginBottom: 8,
+  },
+  impactNumber: {
+    fontSize: 22,
+    color: colors.primary,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  impactLabel: {
+    fontSize: 10,
+    color: colors.white,
+    opacity: 0.7,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+  },
+  impactHighlight: {
+    backgroundColor: 'rgba(0, 245, 255, 0.1)',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 245, 255, 0.2)',
+  },
+  highlightText: {
+    fontSize: 13,
+    color: colors.white,
+    textAlign: 'center',
+    lineHeight: 18,
+  },
+  highlightBold: {
+    color: colors.primary,
+    fontWeight: '700',
   },
   sectionTitle: {
     fontSize: 11,
