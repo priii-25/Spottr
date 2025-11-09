@@ -108,12 +108,12 @@ Spottr/
 │   ├── main.py                # Main server file
 │   ├── config.py              # Configuration
 │   ├── services/
-│   │   ├── detection_service.py      # YOLOv8 detection
+│   │   ├── detection_service.py      # YOLO-NAS detection
 │   │   ├── severity_assessment.py   # AI severity analysis
 │   │   └── websocket_manager.py     # WebSocket handler
 │   ├── models/
 │   │   └── weights/
-│   │       └── best.pt        # YOLOv8 model weights
+│   │       └── best.pt        # YOLO-NAS model weights
 │   └── requirements.txt
 │
 ├── my-app/                    # React Native Mobile App
@@ -134,7 +134,7 @@ Spottr/
 │       ├── styles.ts         # Global styles
 │       └── theme.ts          # Theme configuration
 │
-└── models/                   # YOLOv8 Training Files
+└── models/                   # YOLO-NAS Training Files
     ├── args.yaml
     └── edi_yolov8_21dcc8.py
 ```
