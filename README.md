@@ -16,7 +16,7 @@ Spottr is an intelligent mobile application that uses computer vision and deep l
 - **Multi-modal Severity Assessment** - Advanced severity scoring with weather integration
 
 ### 🧠 AI Capabilities
-- YOLOv8-based object detection
+- YOLO NAS-based object detection
 - Face & license plate privacy filters
 - Real-time WebSocket streaming
 - Segmentation & depth estimation framework (SAM + MiDaS ready)
