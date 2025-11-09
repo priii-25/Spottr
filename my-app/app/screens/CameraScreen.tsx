@@ -3,10 +3,9 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import * as ExpoLocation from 'expo-location';
 import * as ImageManipulator from 'expo-image-manipulator';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import Button from '@/components/Button';
@@ -499,8 +498,7 @@ export default function CameraScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <StatusBar />
-          <ScreenTitle title="AI Camera Detection" />
+          <ScreenTitle title="Camera" />
         
         <View style={commonStyles.cameraView}>
           {isRecording && permission?.granted ? (

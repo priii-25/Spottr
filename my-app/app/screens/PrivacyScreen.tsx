@@ -1,7 +1,6 @@
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import MaskedView from '@react-native-masked-view/masked-view';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import { commonStyles, gradients, colors } from '@/constants/styles';
@@ -17,8 +16,7 @@ export default function PrivacyScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <StatusBar />
-        <ScreenTitle title="Privacy Shield" />
+        <ScreenTitle title="Privacy" />
         
         <View style={styles.privacyIcon}>
           <Text style={styles.iconText}>🔒</Text>

@@ -1,7 +1,6 @@
 import { View, ScrollView, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useState } from 'react';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import Button from '@/components/Button';
 import { commonStyles, gradients, colors } from '@/constants/styles';
@@ -22,7 +21,6 @@ export default function ReportHazardScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <StatusBar />
         <ScreenTitle title="Report Hazard" />
         
         <View style={styles.typeSection}>

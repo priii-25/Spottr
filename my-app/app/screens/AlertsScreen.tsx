@@ -2,7 +2,6 @@ import { View, ScrollView, StyleSheet, Text, TouchableOpacity, Modal } from 'rea
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState } from 'react';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import HazardCard from '@/components/HazardCard';
@@ -58,8 +57,7 @@ export default function AlertsScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <StatusBar />
-          <ScreenTitle title="Live AI Alerts" />
+          <ScreenTitle title="Explore" />
         
         <AIBadge text="Scanning Environment" />
         

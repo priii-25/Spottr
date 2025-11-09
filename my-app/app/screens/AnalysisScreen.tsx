@@ -1,6 +1,5 @@
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import StatBox from '@/components/StatBox';
@@ -18,8 +17,7 @@ export default function AnalysisScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <StatusBar />
-        <ScreenTitle title="AI Analysis" />
+        <ScreenTitle title="Analysis" />
         
         <AIBadge text="Multi-Modal Processing" />
         

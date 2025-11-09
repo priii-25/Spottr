@@ -1,6 +1,5 @@
 import { View, ScrollView, StyleSheet, Text, TextInput } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import HazardCard from '@/components/HazardCard';
 import { commonStyles, gradients, colors } from '@/constants/styles';
@@ -16,7 +15,6 @@ export default function AllHazardsScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <StatusBar />
         <ScreenTitle title="All Hazards" />
         
         <TextInput

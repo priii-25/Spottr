@@ -3,7 +3,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect } from 'react';
 import { useLocalSearchParams, router } from 'expo-router';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import { commonStyles, gradients, colors } from '@/constants/styles';
@@ -91,13 +90,11 @@ export default function HazardDetailScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <StatusBar />
-          
           <View style={styles.header}>
             <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
               <Text style={styles.backButtonText}>← Back</Text>
             </TouchableOpacity>
-            <ScreenTitle title="Hazard Analysis" />
+            <ScreenTitle title="Hazard Detail" />
           </View>
 
           {/* Hazard Info */}

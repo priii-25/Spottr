@@ -3,7 +3,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useState, useEffect, useCallback } from 'react';
 import MaskedView from '@react-native-masked-view/masked-view';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import StatBox from '@/components/StatBox';
@@ -19,9 +18,115 @@ import {
   CrowdStats
 } from '@/services/crowd-intelligence';
 
+// Mock demo data
+const DEMO_HAZARDS: Hazard[] = [
+  {
+    hazard_id: 'demo_1',
+    class_name: 'pothole',
+    severity: 'high',
+    location: { lat: 37.7749, lon: -122.4194 },
+    bbox: [100, 100, 200, 200],
+    detection_timestamp: Date.now() - 2 * 60 * 60 * 1000,
+    initial_confidence: 0.87,
+    status: 'unverified',
+    crowd_intelligence: {
+      confirmations: 6,
+      denials: 1,
+      total_feedback: 7,
+      confidence_score: 0.87,
+      verified_by_count: 6
+    },
+    last_updated: Date.now() - 10 * 60 * 1000
+  },
+  {
+    hazard_id: 'demo_2',
+    class_name: 'construction',
+    severity: 'medium',
+    location: { lat: 37.7750, lon: -122.4195 },
+    bbox: [120, 120, 220, 220],
+    detection_timestamp: Date.now() - 24 * 60 * 60 * 1000,
+    initial_confidence: 0.95,
+    status: 'verified',
+    crowd_intelligence: {
+      confirmations: 10,
+      denials: 0,
+      total_feedback: 10,
+      confidence_score: 0.95,
+      verified_by_count: 10
+    },
+    last_updated: Date.now() - 30 * 60 * 1000
+  },
+  {
+    hazard_id: 'demo_3',
+    class_name: 'debris',
+    severity: 'low',
+    location: { lat: 37.7748, lon: -122.4193 },
+    bbox: [80, 80, 180, 180],
+    detection_timestamp: Date.now() - 45 * 60 * 1000,
+    initial_confidence: 0.71,
+    status: 'unverified',
+    crowd_intelligence: {
+      confirmations: 2,
+      denials: 0,
+      total_feedback: 2,
+      confidence_score: 0.71,
+      verified_by_count: 2
+    },
+    last_updated: Date.now() - 15 * 60 * 1000
+  },
+  {
+    hazard_id: 'demo_4',
+    class_name: 'speed_bump',
+    severity: 'medium',
+    location: { lat: 37.7751, lon: -122.4196 },
+    bbox: [150, 150, 250, 250],
+    detection_timestamp: Date.now() - 3 * 60 * 60 * 1000,
+    initial_confidence: 0.82,
+    status: 'verified',
+    crowd_intelligence: {
+      confirmations: 4,
+      denials: 0,
+      total_feedback: 4,
+      confidence_score: 0.82,
+      verified_by_count: 4
+    },
+    last_updated: Date.now() - 20 * 60 * 1000
+  },
+  {
+    hazard_id: 'demo_5',
+    class_name: 'waterlogging',
+    severity: 'high',
+    location: { lat: 37.7747, lon: -122.4192 },
+    bbox: [90, 90, 190, 190],
+    detection_timestamp: Date.now() - 6 * 60 * 60 * 1000,
+    initial_confidence: 0.78,
+    status: 'unverified',
+    crowd_intelligence: {
+      confirmations: 5,
+      denials: 1,
+      total_feedback: 6,
+      confidence_score: 0.78,
+      verified_by_count: 5
+    },
+    last_updated: Date.now() - 5 * 60 * 1000
+  }
+];
+
+const DEMO_STATS: CrowdStats = {
+  total_hazards: 12,
+  verified_hazards: 9,
+  resolved_hazards: 2,
+  disputed_hazards: 1,
+  total_feedback: 42,
+  unique_contributors: 14,
+  active_hazards: 10,
+  verification_threshold: 3,
+  denial_threshold: 5
+};
+
 export default function CommunityScreen() {
-  const [hazards, setHazards] = useState<Hazard[]>([]);
-  const [stats, setStats] = useState<CrowdStats | null>(null);
+  const [hazards, setHazards] = useState<Hazard[]>(DEMO_HAZARDS);
+  const [stats, setStats] = useState<CrowdStats | null>(DEMO_STATS);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [userId] = useState(`user_${Date.now()}`); // In production, use actual user ID
@@ -34,24 +139,19 @@ export default function CommunityScreen() {
   const loadNearbyHazards = useCallback(async () => {
     try {
       setLoading(true);
-      const nearbyHazards = await crowdClient.getNearbyHazards(
-        mockLocation.latitude,
-        mockLocation.longitude,
-        1000, // 1km radius
-        false
-      );
-      setHazards(nearbyHazards);
+      // Use demo data instead of API call for demo
+      setHazards(DEMO_HAZARDS);
     } catch (error) {
       console.error('Failed to load hazards:', error);
     } finally {
       setLoading(false);
     }
-  }, [mockLocation.latitude, mockLocation.longitude]);
+  }, []);
 
   const loadStats = useCallback(async () => {
     try {
-      const crowdStats = await crowdClient.getStats();
-      setStats(crowdStats);
+      // Use demo stats instead of API call for demo
+      setStats(DEMO_STATS);
     } catch (error) {
       console.error('Failed to load stats:', error);
     }
@@ -144,8 +244,7 @@ export default function CommunityScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
         >
-          <StatusBar />
-          <ScreenTitle title="Crowd Intelligence" />
+          <ScreenTitle title="Community" />
         
         <AIBadge text="Community-Verified Hazards" fullWidth centered />
         

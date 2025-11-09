@@ -1,7 +1,6 @@
 import { View, ScrollView, StyleSheet, Text } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import StatusBar from '@/components/StatusBar';
 import ScreenTitle from '@/components/ScreenTitle';
 import AIBadge from '@/components/AIBadge';
 import { commonStyles, gradients, colors } from '@/constants/styles';
@@ -18,8 +17,7 @@ export default function AIModelsScreen() {
           contentContainerStyle={styles.contentContainer}
           showsVerticalScrollIndicator={false}
         >
-          <StatusBar />
-          <ScreenTitle title="AI Detection Models" />
+          <ScreenTitle title="AI Models" />
         
         <AIBadge text="Edge-Cloud Hybrid" />
         
