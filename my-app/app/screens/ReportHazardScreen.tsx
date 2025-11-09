@@ -52,7 +52,10 @@ export default function ReportHazardScreen() {
           </View>
         </View>
         
-        <Button title="Submit Report" />
+        <Button 
+          title="Submit Report" 
+          onPress={() => {}} 
+        />
         
         <View style={{ height: 80 }} />
       </ScrollView>

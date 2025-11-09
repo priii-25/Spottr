@@ -154,8 +154,17 @@ export default function AlertsScreen() {
                   </View>
                 </View>
 
-                <Button title="Verify Hazard" style={{ marginBottom: 8 }} />
-                <Button title="Mark Resolved" secondary style={{ marginBottom: 8 }} />
+                <Button 
+                  title="Verify Hazard" 
+                  style={{ marginBottom: 8 }} 
+                  onPress={() => {}} 
+                />
+                <Button 
+                  title="Mark Resolved" 
+                  secondary 
+                  style={{ marginBottom: 8 }} 
+                  onPress={() => {}} 
+                />
                 <Button 
                   title="Close" 
                   secondary 

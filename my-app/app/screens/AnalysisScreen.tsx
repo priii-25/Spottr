@@ -59,8 +59,16 @@ export default function AnalysisScreen() {
           <StatBox number="18" label="Verified" />
         </View>
         
-        <Button title="Verify Hazard" style={{ marginBottom: 8 }} />
-        <Button title="Mark Resolved" secondary />
+        <Button 
+          title="Verify Hazard" 
+          style={{ marginBottom: 8 }} 
+          onPress={() => {}} 
+        />
+        <Button 
+          title="Mark Resolved" 
+          secondary 
+          onPress={() => {}} 
+        />
         
         <View style={{ height: 80 }} />
       </ScrollView>

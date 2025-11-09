@@ -39,24 +39,6 @@ const DEMO_HAZARDS: Hazard[] = [
     last_updated: Date.now() - 10 * 60 * 1000
   },
   {
-    hazard_id: 'demo_2',
-    class_name: 'construction',
-    severity: 'medium',
-    location: { lat: 37.7750, lon: -122.4195 },
-    bbox: [120, 120, 220, 220],
-    detection_timestamp: Date.now() - 24 * 60 * 60 * 1000,
-    initial_confidence: 0.95,
-    status: 'verified',
-    crowd_intelligence: {
-      confirmations: 10,
-      denials: 0,
-      total_feedback: 10,
-      confidence_score: 0.95,
-      verified_by_count: 10
-    },
-    last_updated: Date.now() - 30 * 60 * 1000
-  },
-  {
     hazard_id: 'demo_3',
     class_name: 'debris',
     severity: 'low',
@@ -91,24 +73,6 @@ const DEMO_HAZARDS: Hazard[] = [
       verified_by_count: 4
     },
     last_updated: Date.now() - 20 * 60 * 1000
-  },
-  {
-    hazard_id: 'demo_5',
-    class_name: 'waterlogging',
-    severity: 'high',
-    location: { lat: 37.7747, lon: -122.4192 },
-    bbox: [90, 90, 190, 190],
-    detection_timestamp: Date.now() - 6 * 60 * 60 * 1000,
-    initial_confidence: 0.78,
-    status: 'unverified',
-    crowd_intelligence: {
-      confirmations: 5,
-      denials: 1,
-      total_feedback: 6,
-      confidence_score: 0.78,
-      verified_by_count: 5
-    },
-    last_updated: Date.now() - 5 * 60 * 1000
   }
 ];
 
