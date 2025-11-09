@@ -9,7 +9,7 @@ Spottr is an intelligent mobile application that uses computer vision and deep l
 ## 🌟 Features
 
 ### 🎯 Core Functionality
-- **Real-time Hazard Detection** - AI-powered camera detection using YOLOv8
+- **Real-time Hazard Detection** - AI-powered camera detection using YOLO-NAS
 - **GPS Location Tracking** - High-accuracy location tracking for each detection
 - **Community Verification** - Crowd-sourced hazard validation system
 - **Live Statistics Dashboard** - Track detections, accuracy, and nearby hazards
