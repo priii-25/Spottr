@@ -168,7 +168,7 @@ export const DETECTION_CONFIG = {
 ## 🔧 Technical Details
 
 ### AI Models
-- **Detection**: YOLOv8 (custom trained on road hazards)
+- **Detection**: YOLO-NAS (custom trained on road hazards)
 - **Privacy**: MediaPipe (face detection) + EasyOCR (license plates)
 - **Segmentation**: Segment Anything Model (SAM) framework ready
 - **Depth**: MiDaS depth estimation framework ready
@@ -176,7 +176,6 @@ export const DETECTION_CONFIG = {
 ### Performance Optimizations
 - Image resizing to 640x480 before processing
 - JPEG compression (60% quality)
-- 2 FPS frame rate to reduce CPU load
 - Privacy filters disabled by default (enable with GPU)
 - Legacy file system API for compatibility
 
