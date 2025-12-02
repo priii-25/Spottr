@@ -1,6 +1,6 @@
-# Spottr 🚗💨
+# Spottr
 
-**Real-time AI-Powered Road Hazard Detection System**
+**Real-time Road Hazard Flagging System from dashcam**
 
 Spottr is an intelligent mobile application that uses computer vision and deep learning to detect and alert drivers about road hazards in real-time.
 
